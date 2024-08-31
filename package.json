@@ -1,0 +1,21 @@
+{
+  "name": "racemap",
+  "version": "1.0.0",
+  "description": "Projeto da faculdade: Mapa em tempo real de uma corrida",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"next dev\" \"node-red\""
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "next": "^13.1.6",
+    "node-red": "^4.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
