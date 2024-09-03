@@ -16,6 +16,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "mqtt": "^5.10.1",
     "next": "^13.1.6",
     "node-red": "^4.0.2",
     "pg": "^8.11.3",
