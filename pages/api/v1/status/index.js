@@ -1,5 +1,5 @@
 import database from "infra/database.js";
-import mqtt from "infra/mqtt.js"
+import mqtt from "infra/mqtt.js";
 import { client_encoding } from "pg/lib/defaults";
 
 async function status(request, response) {
@@ -9,18 +9,16 @@ async function status(request, response) {
   const sql = await database.query(sql_script); // roda a query
   const version = sql.rows[0].server_version;
 
-  const maxConectionsResult = await database.query("SHOW max_connections;");//script para saber conexões maximas do bd
+  const maxConectionsResult = await database.query("SHOW max_connections;"); //script para saber conexões maximas do bd
   const maxConections = maxConectionsResult.rows[0].max_connections;
 
   const connectionsResult = await database.query({
     text: "SELECT count(*)::int FROM pg_stat_activity WHERE datname = $1;",
-    values: [process.env.POSTGRES_DB]
+    values: [process.env.POSTGRES_DB],
   });
   const connections = connectionsResult.rows[0].count;
 
-
-  const mqttConnection = await mqtt.subscribeTopic('kart');
-
+  const mqttConnection = await mqtt.subscribeTopic("kart");
 
   response.status(200).json({
     updated_at: updatedAt,
@@ -32,9 +30,9 @@ async function status(request, response) {
       },
       broker_mqtt: {
         connected: mqttConnection.connected,
-      }
-    }
+      },
+    },
   });
 }
 
-export default status
+export default status;
