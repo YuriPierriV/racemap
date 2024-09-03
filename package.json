@@ -4,18 +4,24 @@
   "description": "Projeto da faculdade: Mapa em tempo real de uma corrida",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"next dev\" \"node-red\""
+    "dev": "concurrently \"next dev\" \"node-red\"",
+    "lint:check": "prettier --check .",
+    "lint:fix": "prettier --write .",
+    "test": "jest",
+    "test:watch": "jest --watchAll"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "next": "^13.1.6",
     "node-red": "^4.0.2",
+    "pg": "^8.11.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3"
   }
 }
