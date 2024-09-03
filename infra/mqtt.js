@@ -1,18 +1,22 @@
 var mqtt = require("mqtt");
 
-var PORT = process.env.HIVEMQ_PORT;
-var HOST = process.env.HIVEMQ_HOST;
+const fs = require('fs')
+const protocol = 'mqtts'
+// Set the host and port based on the connection information.
+const host = process.env.HIVEMQ_HOST;
+const port = process.env.HIVEMQ_PORT;
+const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
+const connectUrl = `${protocol}://${host}:${port}`
 
-var options = {
-  port: PORT,
-  host: HOST,
-  //keyPath: KEY,
-  //certPath: CERT,
-  //rejectUnauthorized : true,
-  //The CA list will be used to determine if server is authorized
-  //ca: TRUSTED_CA_LIST
-};
-
+const client = mqtt.connect(connectUrl, {
+  clientId,
+  clean: true,
+  connectTimeout: 4000,
+  username: process.env.USERNAME,
+  password: HIVEMQ_PASSWORD,
+  reconnectPeriod: 1000,
+})
+/*
 async function subscribeTopic(topic) {
   const client = mqtt.connect(options);
 
@@ -51,3 +55,4 @@ async function subscribeTopic(topic) {
 export default {
   subscribeTopic: subscribeTopic,
 };
+*/

@@ -18,7 +18,7 @@ async function status(request, response) {
   });
   const connections = connectionsResult.rows[0].count;
 
-  const mqttConnection = await mqtt.subscribeTopic("kart");
+  //const mqttConnection = await mqtt.subscribeTopic("kart");
 
   response.status(200).json({
     updated_at: updatedAt,
@@ -29,7 +29,7 @@ async function status(request, response) {
         connections: parseInt(connections),
       },
       broker_mqtt: {
-        connected: mqttConnection.connected,
+        connected: "mqttConnection.connected",
       },
     },
   });
