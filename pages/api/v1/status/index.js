@@ -1,4 +1,6 @@
-import database from "infra/database.js"
+import database from "infra/database.js";
+import mqtt from "infra/mqtt.js"
+import { client_encoding } from "pg/lib/defaults";
 
 async function status(request, response) {
   const updatedAt = new Date().toISOString(); // Hora atual com ISO Z
@@ -16,6 +18,10 @@ async function status(request, response) {
   });
   const connections = connectionsResult.rows[0].count;
 
+
+  const mqttConnection = await mqtt.subscribeTopic('kart');
+
+
   response.status(200).json({
     updated_at: updatedAt,
     dependencies: {
@@ -23,6 +29,9 @@ async function status(request, response) {
         version: version,
         max_connections: parseInt(maxConections),
         connections: parseInt(connections),
+      },
+      broker_mqtt: {
+        connected: mqttConnection.connected,
       }
     }
   });
