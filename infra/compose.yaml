@@ -5,8 +5,3 @@ services:
       - ../.env.development
     ports:
       - "5432:5432"
-  hivemq:
-    image: "hivemq/hivemq4"
-    ports:
-      - "8080:8080"
-      - "1883:1883"
