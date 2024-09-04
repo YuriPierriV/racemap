@@ -1,58 +1,64 @@
-var mqtt = require("mqtt");
+const mqtt = require("mqtt");
 
-const fs = require('fs')
-const protocol = 'mqtts'
-// Set the host and port based on the connection information.
+const topic = 'kart';
+const qos = 0;
+const protocol = 'mqtts';
 const host = process.env.HIVEMQ_HOST;
 const port = process.env.HIVEMQ_PORT;
-const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
-const connectUrl = `${protocol}://${host}:${port}`
+const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
+const connectUrl = `${protocol}://${host}:${port}`;
 
-const client = mqtt.connect(connectUrl, {
-  clientId,
-  clean: true,
-  connectTimeout: 4000,
-  username: process.env.USERNAME,
-  password: HIVEMQ_PASSWORD,
-  reconnectPeriod: 1000,
-})
-/*
-async function subscribeTopic(topic) {
-  const client = mqtt.connect(options);
+let client; // Declarar o cliente em um escopo mais amplo
 
-  return new Promise((resolve, reject) => {
-    client.on("connect", () => {
-      console.log("Conectado ao broker MQTT");
+function clientSubscribe() {//roda ate parar
+  client = mqtt.connect(connectUrl, {
+    clientId,
+    clean: true,
+    username: process.env.HIVEMQ_USERNAME,
+    password: process.env.HIVEMQ_PASSWORD,
+  });
 
-      client.subscribe(topic, (error) => {
-        if (error) {
-          console.error("Erro ao assinar o tópico:", error);
-          client.end();
-          return reject(error);
-        }
+  client.on('connect', () => {
+    console.log(`${protocol}: Connected`);
 
-        console.log("Assinado no tópico:", topic);
-
-        // Ouve as mensagens do tópico
-        client.on("message", (topic, message) => {
-          console.log(
-            `Mensagem recebida no tópico ${topic}: ${message.toString()}`,
-          );
-          client.end();
-        });
-        resolve(client);
-      });
-    });
-
-    client.on("error", (error) => {
-      console.error("Erro de conexão MQTT:", error);
-      client.end();
-      reject(error);
+    client.subscribe(topic, { qos }, (err) => {
+      if (err) {
+        console.error('Failed to subscribe:', err);
+      } else {
+        console.log(`Subscribed to topic: ${topic}`);
+      }
     });
   });
+
+  client.on('message', (topic, payload) => {
+    console.log('Received Message:', topic, payload.toString());
+    // Não faz sentido retornar algo aqui, pois o retorno não será utilizado diretamente.
+    // Em vez disso, manipular a mensagem no contexto React.
+  });
+
+  client.on('error', (err) => {
+    console.error('Connection error:', err);
+  });
+
+  client.on('close', () => {
+    console.log('Connection closed');
+  });
+
+  return client; // Retorna o cliente para uso no React
 }
 
-export default {
-  subscribeTopic: subscribeTopic,
+// Função para fechar o cliente MQTT
+function closeClient() {
+  if (client) {
+    client.end(() => {
+      console.log('Client disconnected');
+    });
+  } else {
+    console.log('Client is not connected');
+  }
+}
+
+module.exports = {
+  clientSubscribe,
+  closeClient,
 };
-*/
