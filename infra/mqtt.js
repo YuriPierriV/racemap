@@ -1,7 +1,7 @@
 const mqtt = require("mqtt");
 
 const topic = 'kart';
-const qos = 0;
+const qos = 2;
 const protocol = 'mqtts';
 const host = process.env.HIVEMQ_HOST;
 const port = process.env.HIVEMQ_PORT;
