@@ -2,11 +2,11 @@ const mqtt = require("mqtt");
 
 const topic = 'kart';
 const qos = 2;
-const protocol = 'mqtts';
+const protocol = 'wss';
 const host = process.env.HIVEMQ_HOST;
 const port = process.env.HIVEMQ_PORT;
 const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
-const connectUrl = `${protocol}://${host}:${port}`;
+const connectUrl = `${protocol}://${host}:${port}/mqtt`;
 
 let client; // Declarar o cliente em um escopo mais amplo
 
@@ -32,8 +32,6 @@ function clientSubscribe() {//roda ate parar
 
   client.on('message', (topic, payload) => {
     console.log('Received Message:', topic, payload.toString());
-    // Não faz sentido retornar algo aqui, pois o retorno não será utilizado diretamente.
-    // Em vez disso, manipular a mensagem no contexto React.
   });
 
   client.on('error', (err) => {
