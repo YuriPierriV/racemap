@@ -1,12 +1,18 @@
 import mqtt from 'mqtt';
 import React, { useEffect, useState } from 'react';
 
+
+
 const MqttPage = ({ mqttConfig }) => {
   const [messages, setMessages] = useState([]);
+
+
 
   useEffect(() => {
     const { host, port, protocol, topic, qos, clientId, username, password } = mqttConfig;
     const connectUrl = `${protocol}://${host}:${port}/mqtt`;
+
+
 
     const options = {
       clientId,
@@ -18,20 +24,19 @@ const MqttPage = ({ mqttConfig }) => {
     const client = mqtt.connect(connectUrl, options);
 
     client.on('connect', () => {
-      console.log(`${protocol}: Connected`);
-
       client.subscribe(topic, { qos }, (err) => {
         if (err) {
           console.error('Failed to subscribe:', err);
-        } else {
-          console.log(`Subscribed to topic: ${topic}`);
         }
       });
     });
 
     client.on('message', (topic, payload) => {
-      console.log('Received Message:', topic, payload.toString());
-      setMessages((prevMessages) => [...prevMessages, payload.toString()]);
+      const newMessage = payload.toString();
+      setMessages((prevMessages) => {
+        const updatedMessages = [newMessage, ...prevMessages];
+        return updatedMessages.slice(0, 10); // Mantém as últimas 10 mensagens
+      });
     });
 
     client.on('error', (err) => {

@@ -10,8 +10,8 @@ const int ppsPin = 14; // GPIO14 (D5)
 volatile unsigned long ppsCounter = 0;
 
 
-const char* ssid = "Pierri-Wifi";
-const char* password = "Pierricyj123";
+const char* ssid = "";
+const char* password = "";
 const char* mqtt_server = "5d9db2e1dddd44ddb1f65079e8bb21e0.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
 
@@ -24,6 +24,12 @@ int value = 0;
 const char *mqtt_topic = "kart";  // MQTT topic
 const char *mqtt_username = "kartserver";  // MQTT username for authentication
 const char *mqtt_password = "Kartserver123";  // MQTT password for authentication
+
+
+// Comando UBX para configurar a taxa de atualização para 10 Hz
+unsigned char setRateTo10Hz[] = {
+  0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x64, 0x00, 0x01, 0x00, 0x01, 0x00, 0x7A, 0x12
+};
 
 
 
@@ -57,7 +63,15 @@ void setup_wifi() {
 }
 
 
-
+// Função para enviar comandos UBX ao GPS
+void sendUBX(unsigned char *UBXmsg, int len)
+{
+  for (int i = 0; i < len; i++)
+  {
+    Serial.write(UBXmsg[i]);
+  }
+  Serial.flush();
+}
 
 /************* Connect to MQTT Broker ***********/
 void reconnect() {
@@ -98,6 +112,8 @@ void setup() {
   setup_wifi();
   espClient.setInsecure();
   client.setServer(mqtt_server, 8883);
+
+  //sendUBX(setRateTo10Hz, sizeof(setRateTo10Hz));
 
   pinMode(ppsPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(ppsPin), ppsInterrupt, RISING); // Configura a interrupção para o PPS
