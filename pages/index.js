@@ -1,30 +1,17 @@
 import mqtt from 'mqtt';
 import React, { useEffect, useState } from 'react';
+import { connectUrl, options } from 'infra/mqttConfig.js'; // Ajuste o caminho conforme necessário
 
-
-
-const MqttPage = ({ mqttConfig }) => {
+const MqttPage = () => {
   const [messages, setMessages] = useState([]);
-
-
+  const [connection, setConnection] = useState(false); // Estado para a conexão
 
   useEffect(() => {
-    const { host, port, protocol, topic, qos, clientId, username, password } = mqttConfig;
-    const connectUrl = `${protocol}://${host}:${port}/mqtt`;
-
-
-
-    const options = {
-      clientId,
-      clean: true,
-      username,
-      password,
-    };
-
     const client = mqtt.connect(connectUrl, options);
 
     client.on('connect', () => {
-      client.subscribe(topic, { qos }, (err) => {
+      setConnection(true); // Marca como conectado
+      client.subscribe("kart", { qos: 2 }, (err) => {
         if (err) {
           console.error('Failed to subscribe:', err);
         }
@@ -41,16 +28,18 @@ const MqttPage = ({ mqttConfig }) => {
 
     client.on('error', (err) => {
       console.error('Connection error:', err);
+      setConnection(false); // Marca como desconectado em caso de erro
     });
 
     client.on('close', () => {
       console.log('Connection closed');
+      setConnection(false); // Marca como desconectado ao fechar a conexão
     });
 
     return () => {
       client.end(); // Fechar a conexão ao desmontar o componente
     };
-  }, [mqttConfig]);
+  }, []);
 
   return (
     <div>
@@ -60,28 +49,9 @@ const MqttPage = ({ mqttConfig }) => {
           <li key={index}>{message}</li>
         ))}
       </ul>
+      <h3>Connection: {connection ? 'Connected' : 'Disconnected'}</h3> {/* Exibe o status da conexão */}
     </div>
   );
-};
-
-// Função getServerSideProps para fornecer as variáveis ao front-end
-export const getServerSideProps = async () => {
-  const mqttConfig = {
-    host: process.env.NEXT_PUBLIC_HIVEMQ_HOST,
-    port: process.env.NEXT_PUBLIC_HIVEMQ_PORT,
-    protocol: 'wss',
-    topic: 'kart',
-    qos: 2,
-    clientId: `mqtt_${Math.random().toString(16).slice(3)}`,
-    username: process.env.NEXT_PUBLIC_HIVEMQ_USERNAME,
-    password: process.env.NEXT_PUBLIC_HIVEMQ_PASSWORD,
-  };
-
-  return {
-    props: {
-      mqttConfig,
-    },
-  };
 };
 
 export default MqttPage;
