@@ -14,6 +14,8 @@ const char* ssid = "";
 const char* password = "";
 const char* mqtt_server = "5d9db2e1dddd44ddb1f65079e8bb21e0.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
+String clientId = "ESP8266Client-";   // Cria um ID de cliente
+
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -21,7 +23,9 @@ unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE	(50)
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
-const char *mqtt_topic = "kart";  // MQTT topic
+int modeKart = 1;
+const char *mqtt_topic_write = "kart";  // MQTT topic write
+const char *mqtt_topic_read = "config";  // MQTT topic write
 const char *mqtt_username = "kartserver";  // MQTT username for authentication
 const char *mqtt_password = "Kartserver123";  // MQTT password for authentication
 
@@ -31,6 +35,10 @@ unsigned char setRateTo10Hz[] = {
   0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x64, 0x00, 0x01, 0x00, 0x01, 0x00, 0x7A, 0x12
 };
 
+// Comando UBX para configurar a taxa de atualização para 1 Hz
+unsigned char setRateTo1Hz[] = {
+  0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xE8, 0x03, 0x01, 0x00, 0x01, 0x00, 0x01, 0x39
+};
 
 
 void IRAM_ATTR ppsInterrupt() {
@@ -78,13 +86,13 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    String clientId = "ESP8266Client-";   // Create a random client ID
-    clientId += String(random(0xffff), HEX);
+    
     // Attempt to connect
     if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("connected");
 
       client.subscribe("kart");   // subscribe the topics here
+      client.subscribe("config");   // subscribe the topics here
 
     } else {
       Serial.print("failed, rc=");
@@ -100,6 +108,33 @@ void publishMessage(const char* topic, String payload , boolean retained){
       Serial.println("Message publised ["+String(topic)+"]: "+payload);
 }
 
+/***** Call back Method for Receiving MQTT messages and Switching LED ****/
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String incommingMessage = "";
+  for (int i = 0; i < length; i++) incommingMessage+=(char)payload[i];
+
+  
+
+  //--- check the incoming message
+  if (strcmp(topic, "config") == 0) {  // Verifica se as strings são iguais
+      
+      if(incommingMessage == "0"){
+        modeKart = 0;
+      }
+      if(incommingMessage == "1"){
+        modeKart = 1;
+        sendUBX(setRateTo1Hz, sizeof(setRateTo1Hz));
+      }
+      if(incommingMessage == "10"){
+        modeKart = 10;
+        sendUBX(setRateTo10Hz, sizeof(setRateTo10Hz));
+      }
+  }
+
+
+}
+
 
 void setup() {
   Serial.begin(115200); // Inicializa a comunicação serial para monitoramento
@@ -113,10 +148,13 @@ void setup() {
   espClient.setInsecure();
   client.setServer(mqtt_server, 8883);
 
+  // Gera o ID de cliente com número aleatório
+  clientId += String(random(0xffff), HEX);  // Concatena um número aleatório em hexadecimal
   //sendUBX(setRateTo10Hz, sizeof(setRateTo10Hz));
 
   pinMode(ppsPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(ppsPin), ppsInterrupt, RISING); // Configura a interrupção para o PPS
+  client.setCallback(callback);
 }
 
 void loop() {
@@ -127,7 +165,7 @@ void loop() {
     // Verifica se a localização foi atualizada
     if (!client.connected()) reconnect();
     client.loop();
-    if (gps.location.isUpdated()) {
+    if (gps.location.isUpdated() && modeKart != 0) {
       Serial.print("Latitude: ");
       Serial.println(gps.location.lat(), 6);
       Serial.print("Longitude: ");
@@ -135,8 +173,7 @@ void loop() {
 
       DynamicJsonDocument doc(1024);
 
-      doc["deviceId"] = "Esp";
-      doc["siteId"] = "Kart";
+      doc["deviceId"] = clientId.c_str();
       doc["lat"] = gps.location.lat();
       doc["long"] = gps.location.lng();
 
