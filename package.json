@@ -11,13 +11,15 @@
     "lint:check": "prettier --check .",
     "lint:fix": "prettier --write .",
     "test": "jest",
-    "test:watch": "jest --watchAll"
+    "test:watch": "jest --watchAll",
+    "migration:create": "node-pg-migrate create"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "mqtt": "^5.10.1",
     "next": "^13.5.7",
+    "node-pg-migrate": "^7.6.1",
     "node-red": "^4.0.2",
     "pg": "^8.11.3",
     "react": "^18.2.0",

@@ -81,7 +81,7 @@ const MqttPage = () => {
     if (trace.length > 0) {
       const newScaleX = canvasRef.current.width / (longMax - longMin);
       const newScaleY = canvasRef.current.height / (latMax - latMin);
-      setScale({ scaleX: newScaleX, scaleY: newScaleY });
+      setScale({ scaleX: newScaleX * 0.8, scaleY: newScaleY * 0.8 });
       drawTrace(trace);
     }
   }, [trace, longMin, longMax, latMin, latMax]);
@@ -110,6 +110,9 @@ const MqttPage = () => {
     positions.forEach((pos, index) => {
       const x = (pos.long - longMin) * scale.scaleX;
       const y = canvas.height - (pos.lat - latMin) * scale.scaleY; // Inverte Y para o canvas
+
+
+
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
