@@ -9,17 +9,19 @@ async function saveTrace(request, response) {
 
   try {
     const insertQuery = `
-            INSERT INTO tracks (trace)
-            VALUES ($1)
-        `;
+      INSERT INTO tracks (trace)
+      VALUES ($1)
+      RETURNING id
+    `;
 
     const values = [JSON.stringify(trace)];
-    await database.query({
+    const result = await database.query({
       text: insertQuery,
       values: values,
     });
 
-    response.status(201).json({ message: 'Trace saved successfully' });
+    const trackId = result.rows[0].id; // Captura o ID do track recém-criado
+    response.status(201).json({ message: 'Trace saved successfully', trackId });
   } catch (err) {
     console.error('Error saving trace data:', err.message);
     response.status(500).json({ error: 'Error saving trace data' });

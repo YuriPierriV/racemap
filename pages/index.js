@@ -91,7 +91,7 @@ const MqttPage = () => {
     };
 
     fetchSavedTraces();
-  }, []);
+  }, [selectedTrace]);
 
   useEffect(() => {
     const draw = () => {
@@ -216,6 +216,7 @@ const MqttPage = () => {
         })
         .then((data) => {
           console.log("Trace saved successfully:", data);
+          selectTrace(data.trackId);
         })
         .catch((error) => {
           console.error("Error saving trace:", error);
