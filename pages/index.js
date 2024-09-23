@@ -17,6 +17,7 @@ const MqttPage = () => {
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const [savedTraces, setSavedTraces] = useState([]);
   const [selectedTrace, setSelectedTrace] = useState(null); // Traçado selecionado
+  const [fiveTraces, setFiveTraces] = useState([]);
 
   useEffect(() => {
     const mqttClient = mqtt.connect(connectUrl, options);
@@ -36,23 +37,94 @@ const MqttPage = () => {
       if (mode === "Criando traçado") {
         const position = { lat: message.lat, long: message.long };
 
-        setTrace(prevTrace => {
-          if (prevTrace.length > 0) {
-            const lastPosition = prevTrace[0];
-            const distance = haversineDistance(lastPosition.lat, lastPosition.long, position.lat, position.long);
-            // Adiciona a nova posição apenas se a distância for maior que 10 metros
-            if (distance > 2) {
-              setLatMin(prevMin => (prevMin === Infinity ? position.lat : Math.min(prevMin, position.lat)));
-              setLatMax(prevMax => (prevMax === -Infinity ? position.lat : Math.max(prevMax, position.lat)));
-              setLongMin(prevMin => (prevMin === Infinity ? position.long : Math.min(prevMin, position.long)));
-              setLongMax(prevMax => (prevMax === -Infinity ? position.long : Math.max(prevMax, position.long)));
-              return [position, ...prevTrace];
+        setFiveTraces(prevFive => {
+          let updatedTraces; // Variável que vai armazenar as novas posições atualizadas
+
+          // Verifica se a lista de traçados anteriores (prevFive) tem menos que 5 posições
+          if (prevFive.length < 10) {
+            // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
+            if (prevFive.length == 0) {
+              return [position];
+            }
+
+            // Se a lista de traçados anteriores tiver algum item
+
+            if (trace.length > 0) {
+              console.log(trace[0]);
+              const lastPositionTrace = trace[0]; // Pega a última posição registrada em 'trace'
+
+
+              // Calcula a distância entre a última posição de 'trace' e a nova posição 'position'
+              const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
+
+              // Se a distância for menor que 4 metros, a nova posição será adicionada
+              if (distanceFive < 4 && distanceFive > 1) {
+                console.log("passou   " + distanceFive)
+                updatedTraces = [position, ...prevFive]; // Adiciona a nova posição no início da lista de traçados anteriores
+                return updatedTraces; // Retorna a lista atualizada
+              }
+
+              // Se a distância for maior que 4 metros, retorna a lista anterior sem alterações
+              console.log("não passou " + prevFive.length);
+              return prevFive;
+            } else {
+              // Caso a lista nao tenha posições, adiciona a nova posição diretamente
+              updatedTraces = [position, ...prevFive];
+
+              return updatedTraces; // Retorna a lista atualizada
             }
           } else {
-            return [position]; // Se não há posições, adiciona a nova
+            // Caso a lista de traçados anteriores já tenha 5 posições, adiciona a nova posição e remove a mais antiga
+            updatedTraces = [position, ...prevFive]; // Mantém apenas as 5 posições mais recentes
+
+            // Calcula a média das latitudes e longitudes das 5 últimas posições
+            const totalLat = updatedTraces.reduce((acc, trace) => acc + trace.lat, 0); // Soma todas as latitudes
+            const totalLng = updatedTraces.reduce((acc, trace) => acc + trace.long, 0); // Soma todas as longitudes
+
+            const avgLat = totalLat / updatedTraces.length; // Calcula a média da latitude
+            const avgLng = totalLng / updatedTraces.length; // Calcula a média da longitude
+
+            const avgPosition = { lat: avgLat, long: avgLng }; // Cria uma nova posição média usando as médias de latitude e longitude
+
+
+
+            // Atualiza a lista 'trace' com base na distância entre a última posição e a média calculada
+            setTrace(prevTrace => {
+
+              if (prevTrace.length > 0) {
+                const lastPosition = prevTrace[0]; // Pega a última posição registrada em 'trace'
+
+                // Calcula a distância entre a última posição e a média das 5 últimas posições
+                const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
+
+                // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
+                if (distance > 1 && distance < 2) {
+                  console.log(distance); // Exibe a distância no console
+
+                  // Atualiza os valores mínimos e máximos de latitude
+                  setLatMin(prevMin => Math.min(prevMin, avgPosition.lat));
+                  setLatMax(prevMax => Math.max(prevMax, avgPosition.lat));
+
+                  // Atualiza os valores mínimos e máximos de longitude
+                  setLongMin(prevMin => Math.min(prevMin, avgPosition.long));
+                  setLongMax(prevMax => Math.max(prevMax, avgPosition.long));
+
+                  return [avgPosition, ...prevTrace]; // Adiciona a média ao início da lista de 'trace'
+                }
+                console.log(distance + " naoo passou");
+                return prevTrace;
+              } else {
+                // Se 'trace' estiver vazio, adiciona a nova posição média como o primeiro item
+                return [avgPosition];
+              }
+            });
+
+
+            return [];
           }
-          return prevTrace; // Mantém a lista anterior se a condição não for atendida
         });
+
+
       } else {
         setMessages(prevMessages => {
           const updatedMessages = [message, ...prevMessages];
@@ -144,10 +216,22 @@ const MqttPage = () => {
 
     if (positions.length === 0) return;
 
+    if (positions.length > 3) {
+      positions = positions.slice(0, positions.length - 3); // Mantém todas as posições, exceto as 3 últimas
+    }
+
+    const padding = 50; // Define o padding de 20px
+
+    // Calcula novas escalas considerando o padding
+    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax - longMin);
+    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax - latMin);
+
     ctx.beginPath();
     positions.forEach((pos, index) => {
-      const x = (pos.long - longMin) * scale.scaleX;
-      const y = canvas.height - (pos.lat - latMin) * scale.scaleY;
+      // Ajusta as coordenadas com o padding
+      const x = (pos.long - longMin) * adjustedScaleX + padding;
+      const y = canvas.height - ((pos.lat - latMin) * adjustedScaleY + padding); // O canvas inverte o eixo Y, então usamos canvas.height
+
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -159,9 +243,11 @@ const MqttPage = () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // Desenha pontos
     positions.forEach((pos) => {
-      const x = (pos.long - longMin) * scale.scaleX;
-      const y = canvas.height - (pos.lat - latMin) * scale.scaleY;
+      // Ajusta as coordenadas dos pontos com o padding
+      const x = (pos.long - longMin) * adjustedScaleX + padding;
+      const y = canvas.height - ((pos.lat - latMin) * adjustedScaleY + padding);
 
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -169,6 +255,8 @@ const MqttPage = () => {
       ctx.fill();
     });
   };
+
+
 
   const sendMessage = (newMode) => {
     if (client) {
@@ -184,7 +272,7 @@ const MqttPage = () => {
   const createTrace = () => {
     if (client) {
       setMode("Criando traçado");
-      client.publish('config', "1", { qos: 2 }, (err) => {
+      client.publish('config', "10", { qos: 2 }, (err) => {
         if (err) {
           console.error('Failed to publish:', err);
         }
