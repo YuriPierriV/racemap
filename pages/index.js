@@ -2,7 +2,6 @@ import mqtt from 'mqtt';
 import React, { useEffect, useState, useRef } from 'react';
 import { connectUrl, options } from 'infra/mqttConfig.js';
 
-
 const MqttPage = () => {
   const [messages, setMessages] = useState([]);
   const [connection, setConnection] = useState(false);
@@ -16,7 +15,8 @@ const MqttPage = () => {
   const canvasRef = useRef(null);
   const [scale, setScale] = useState({ scaleX: 1, scaleY: 1 });
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-
+  const [savedTraces, setSavedTraces] = useState([]);
+  const [selectedTrace, setSelectedTrace] = useState(null); // Traçado selecionado
 
   useEffect(() => {
     const mqttClient = mqtt.connect(connectUrl, options);
@@ -36,17 +36,16 @@ const MqttPage = () => {
       if (mode === "Criando traçado") {
         const position = { lat: message.lat, long: message.long };
 
-        setLatMin(prevMin => (prevMin === Infinity ? position.lat : Math.min(prevMin, position.lat)));
-        setLatMax(prevMax => (prevMax === -Infinity ? position.lat : Math.max(prevMax, position.lat)));
-        setLongMin(prevMin => (prevMin === Infinity ? position.long : Math.min(prevMin, position.long)));
-        setLongMax(prevMax => (prevMax === -Infinity ? position.long : Math.max(prevMax, position.long)));
-
         setTrace(prevTrace => {
           if (prevTrace.length > 0) {
             const lastPosition = prevTrace[0];
             const distance = haversineDistance(lastPosition.lat, lastPosition.long, position.lat, position.long);
-            // Adiciona a nova posição apenas se a distância for maior que 2 metros
+            // Adiciona a nova posição apenas se a distância for maior que 10 metros
             if (distance > 2) {
+              setLatMin(prevMin => (prevMin === Infinity ? position.lat : Math.min(prevMin, position.lat)));
+              setLatMax(prevMax => (prevMax === -Infinity ? position.lat : Math.max(prevMax, position.lat)));
+              setLongMin(prevMin => (prevMin === Infinity ? position.long : Math.min(prevMin, position.long)));
+              setLongMax(prevMax => (prevMax === -Infinity ? position.long : Math.max(prevMax, position.long)));
               return [position, ...prevTrace];
             }
           } else {
@@ -78,13 +77,52 @@ const MqttPage = () => {
   }, [mode]);
 
   useEffect(() => {
+    const fetchSavedTraces = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/getsavedtraces`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch saved traces');
+        }
+        const data = await response.json();
+        setSavedTraces(data);
+      } catch (error) {
+        console.error('Error fetching saved traces:', error);
+      }
+    };
+
+    fetchSavedTraces();
+  }, []);
+
+  useEffect(() => {
+    const draw = () => {
+      let traceToDraw = trace;
+
+      if (selectedTrace) {
+        traceToDraw = selectedTrace; // Use o traçado selecionado
+      }
+
+      if (traceToDraw.length > 0) {
+
+        drawTrace(traceToDraw); // Desenha o traçado
+      }
+    };
+
+    draw(); // Chama a função de desenho
+
+  }, [selectedTrace]); // Dependências que devem acionar a atualização
+
+  useEffect(() => {
     if (trace.length > 0) {
+
       const newScaleX = canvasRef.current.width / (longMax - longMin);
       const newScaleY = canvasRef.current.height / (latMax - latMin);
-      setScale({ scaleX: newScaleX * 0.8, scaleY: newScaleY * 0.8 });
+
+      setScale({ scaleX: newScaleX, scaleY: newScaleY });
       drawTrace(trace);
     }
-  }, [trace, longMin, longMax, latMin, latMax]);
+
+  }, [trace]); // Dependências que devem acionar a atualização
+
 
   const haversineDistance = (lat1, long1, lat2, long2) => {
     const R = 6371000; // Raio da Terra em metros
@@ -109,19 +147,27 @@ const MqttPage = () => {
     ctx.beginPath();
     positions.forEach((pos, index) => {
       const x = (pos.long - longMin) * scale.scaleX;
-      const y = canvas.height - (pos.lat - latMin) * scale.scaleY; // Inverte Y para o canvas
-
-
-
+      const y = canvas.height - (pos.lat - latMin) * scale.scaleY;
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
         ctx.lineTo(x, y);
       }
     });
+
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    positions.forEach((pos) => {
+      const x = (pos.long - longMin) * scale.scaleX;
+      const y = canvas.height - (pos.lat - latMin) * scale.scaleY;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    });
   };
 
   const sendMessage = (newMode) => {
@@ -155,7 +201,6 @@ const MqttPage = () => {
         }
       });
 
-      // Enviar o traçado para o servidor
       fetch(`${BASE_URL}/api/v1/savetrace`, {
         method: "POST",
         headers: {
@@ -178,6 +223,29 @@ const MqttPage = () => {
     }
   };
 
+  const selectTrace = (position) => {
+
+
+    if (position.length > 0) {
+      const newLatMin = Math.min(...position.map(pos => pos.lat));
+      const newLatMax = Math.max(...position.map(pos => pos.lat));
+      const newLongMin = Math.min(...position.map(pos => pos.long));
+      const newLongMax = Math.max(...position.map(pos => pos.long));
+
+      setLatMin(newLatMin);
+      setLatMax(newLatMax);
+      setLongMin(newLongMin);
+      setLongMax(newLongMax);
+
+      const newScaleX = canvasRef.current.width / (newLongMax - newLongMin);
+      const newScaleY = canvasRef.current.height / (newLatMax - newLatMin);
+
+      setScale({ scaleX: newScaleX, scaleY: newScaleY });
+    }
+
+    setSelectedTrace(position);
+  };
+
 
 
   return (
@@ -196,24 +264,34 @@ const MqttPage = () => {
           Off Mode
         </button>
         <button onClick={() => sendMessage('1')} disabled={!connection || mode === 'Criando traçado'}>
-          Normal Mode
+          On Mode
         </button>
-        <button onClick={() => sendMessage('10')} disabled={!connection || mode === 'Criando traçado'}>
-          Race Mode
-        </button>
-      </div>
-      <h3>Current Mode: {mode}</h3>
-      <div>
-        <h3>Criar traçado:</h3>
         <button onClick={createTrace} disabled={!connection || mode === 'Criando traçado'}>
-          Iniciar
+          Create Trace
         </button>
-        <button onClick={saveTrace} disabled={!connection}>
-          Finalizar
+        <button onClick={saveTrace} disabled={trace.length === 0}>
+          Save Trace
         </button>
       </div>
-      <h2>Traçado:</h2>
 
+      <h3>Traces:</h3>
+      <select onChange={(e) => {
+        const index = e.target.selectedIndex - 1; // Ajuste para ignorar a opção padrão
+        if (index >= 0 && index < savedTraces.length) {
+          selectTrace(savedTraces[index].trace);
+        } else {
+          setSelectedTrace(null); // Limpa a seleção se a opção padrão for escolhida
+        }
+      }}>
+        <option value="">Select a trace</option>
+        {savedTraces.map((trace, index) => (
+          <option key={index} value={index}>
+            {trace.id}
+          </option>
+        ))}
+      </select>
+
+      <br></br>
       <canvas ref={canvasRef} width={800} height={600} style={{ border: '1px solid black' }} />
     </div>
   );
