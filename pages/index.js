@@ -58,7 +58,7 @@ const MqttPage = () => {
               const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
 
               // Se a distância for menor que 4 metros, a nova posição será adicionada
-              if (distanceFive < 4 && distanceFive > 1) {
+              if (distanceFive > 1 && distanceFive < 5) {
                 console.log("passou   " + distanceFive)
                 updatedTraces = [position, ...prevFive]; // Adiciona a nova posição no início da lista de traçados anteriores
                 return updatedTraces; // Retorna a lista atualizada
@@ -98,7 +98,7 @@ const MqttPage = () => {
                 const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
 
                 // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-                if (distance > 1 && distance < 2) {
+                if (distance > 2) {
                   console.log(distance); // Exibe a distância no console
 
                   // Atualiza os valores mínimos e máximos de latitude
