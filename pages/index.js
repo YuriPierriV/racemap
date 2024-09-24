@@ -240,7 +240,7 @@ const MqttPage = () => {
     });
 
     ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     // Desenha pontos
@@ -250,7 +250,7 @@ const MqttPage = () => {
       const y = canvas.height - ((pos.lat - latMin) * adjustedScaleY + padding);
 
       ctx.beginPath();
-      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
       ctx.fillStyle = 'red';
       ctx.fill();
     });
@@ -338,52 +338,121 @@ const MqttPage = () => {
 
 
   return (
-    <div>
-      <h2>Received Messages:</h2>
-      <ul>
-        {messages.map((message, index) => (
-          <li key={index}>{JSON.stringify(message)}</li>
-        ))}
-      </ul>
-      <h3>Connection: {connection ? 'Connected' : 'Disconnected'}</h3>
+    <main className="bg-slate-700">
+      <div className="grid grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
+        <div>
+          <div className={`flex items-center p-4 mb-4 w-min text-sm border  rounded-lg ${connection ? 'text-green-800 border-green-300 bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800' : 'text-red-800 border-red-300 bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800'}`} role="alert">
+            <svg className="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
 
-      <div>
-        <h3>Select Mode:</h3>
-        <button onClick={() => sendMessage('0')} disabled={!connection || mode === 'Criando traçado'}>
-          Off Mode
-        </button>
-        <button onClick={() => sendMessage('1')} disabled={!connection || mode === 'Criando traçado'}>
-          On Mode
-        </button>
-        <button onClick={createTrace} disabled={!connection || mode === 'Criando traçado'}>
-          Create Trace
-        </button>
-        <button onClick={saveTrace} disabled={trace.length === 0}>
-          Save Trace
-        </button>
+            <span className="sr-only">Connection</span>
+            <div>
+              <span className="font-medium">{connection ? "Conectado" : "Conectando"}</span>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
+
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Device ID
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Latitude
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Longitude
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {messages.map((message, index) => (
+                  <tr className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
+                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                      {message.deviceId}
+                    </th>
+                    <td className="px-6 py-4">
+                      {message.lat}
+                    </td>
+                    <td className="px-6 py-4">
+                      {message.long}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-4 mt-4">
+            <h3 className="text-xl font-semibold mb-2">Modo:</h3>
+            <button
+              onClick={() => sendMessage('0')}
+              disabled={!connection || mode === 'Criando traçado'}
+              className="px-4 py-2 bg-red-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
+            >
+              Off
+            </button>
+            <button
+              onClick={() => sendMessage('1')}
+              disabled={!connection || mode === 'Criando traçado'}
+              className="px-4 py-2 bg-green-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
+            >
+              On
+            </button>
+            <button
+              onClick={createTrace}
+              disabled={!connection || mode === 'Criando traçado'}
+              className="px-4 py-2 bg-blue-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
+            >
+              Criar traçado
+            </button>
+            <button
+              onClick={saveTrace}
+              disabled={trace.length === 0}
+              className="px-4 py-2 bg-yellow-500 text-white rounded disabled:opacity-50 font-bold"
+            >
+              Salvar Traçado
+            </button>
+          </div>
+
+          <h3 className="text-xl font-semibold mb-2">Traces:</h3>
+          <select
+            onChange={(e) => {
+              const index = e.target.selectedIndex - 1; // Ajuste para ignorar a opção padrão
+              if (index >= 0 && index < savedTraces.length) {
+                selectTrace(savedTraces[index].trace);
+              } else {
+                setSelectedTrace(null); // Limpa a seleção se a opção padrão for escolhida
+              }
+            }}
+            className="p-2 rounded border border-gray-300 mb-4"
+          >
+            <option value="">Select a trace</option>
+            {savedTraces.map((trace, index) => (
+              <option key={index} value={index}>
+                {trace.id}
+              </option>
+            ))}
+          </select>
+
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="border border-black"
+          />
+        </div>
       </div>
+    </main>
 
-      <h3>Traces:</h3>
-      <select onChange={(e) => {
-        const index = e.target.selectedIndex - 1; // Ajuste para ignorar a opção padrão
-        if (index >= 0 && index < savedTraces.length) {
-          selectTrace(savedTraces[index].trace);
-        } else {
-          setSelectedTrace(null); // Limpa a seleção se a opção padrão for escolhida
-        }
-      }}>
-        <option value="">Select a trace</option>
-        {savedTraces.map((trace, index) => (
-          <option key={index} value={index}>
-            {trace.id}
-          </option>
-        ))}
-      </select>
 
-      <br></br>
-      <canvas ref={canvasRef} width={800} height={600} style={{ border: '1px solid black' }} />
-    </div>
   );
+
 };
 
 export default MqttPage;
