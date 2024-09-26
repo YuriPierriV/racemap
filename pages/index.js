@@ -339,18 +339,24 @@ const MqttPage = () => {
 
   return (
     <main className="bg-slate-700">
-      <div className="grid grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
+      <div className="grid 2xl:grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
         <div>
-          <div className={`flex items-center p-4 mb-4 w-min text-sm border  rounded-lg ${connection ? 'text-green-800 border-green-300 bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800' : 'text-red-800 border-red-300 bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800'}`} role="alert">
-            <svg className="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-
+          <div className={`flex items-center p-4 mb-4 w-min text-sm border rounded-lg ${connection ? 'text-green-800 border-green-300 bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800' : 'text-red-800 border-red-300 bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800'}`} role="alert">
+            {connection ? (
+              <svg className="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            ) : (
+              <svg className="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            )}
             <span className="sr-only">Connection</span>
             <div>
               <span className="font-medium">{connection ? "Conectado" : "Conectando"}</span>
             </div>
           </div>
+
           <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -371,13 +377,13 @@ const MqttPage = () => {
               <tbody>
                 {messages.map((message, index) => (
                   <tr className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                    <th scope="row" className="md:px-6 px-2 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                       {message.deviceId}
                     </th>
-                    <td className="px-6 py-4">
+                    <td className="md:px-6 px-2 py-4">
                       {message.lat}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="md:px-6 px-2 py-4">
                       {message.long}
                     </td>
                   </tr>
@@ -421,30 +427,31 @@ const MqttPage = () => {
           </div>
 
           <h3 className="text-xl font-semibold mb-2">Traces:</h3>
-          <select
-            onChange={(e) => {
-              const index = e.target.selectedIndex - 1; // Ajuste para ignorar a opção padrão
-              if (index >= 0 && index < savedTraces.length) {
-                selectTrace(savedTraces[index].trace);
-              } else {
-                setSelectedTrace(null); // Limpa a seleção se a opção padrão for escolhida
-              }
-            }}
-            className="p-2 rounded border border-gray-300 mb-4"
-          >
-            <option value="">Select a trace</option>
+          <ul role="list" class="divide-y divide-gray-100">
             {savedTraces.map((trace, index) => (
-              <option key={index} value={index}>
-                {trace.id}
-              </option>
+              <li class="flex justify-between gap-x-6 py-5">
+                <div class="flex min-w-0 gap-x-4">
+
+                  <div class="min-w-0 flex-auto">
+                    <p class="text-sm font-semibold leading-6 text-gray-900">{trace.id}</p>
+                    <p class="mt-1 truncate text-xs leading-5 text-gray-500">{trace.name}</p>
+                  </div>
+                </div>
+                <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+                  <p class="text-sm leading-6 text-gray-900">Co-Founder / CEO</p>
+                  <p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">{trace.created_at}</time></p>
+                </div>
+              </li>
+
             ))}
-          </select>
+
+
+          </ul>
+
 
           <canvas
             ref={canvasRef}
-            width={800}
-            height={600}
-            className="border border-black"
+            className="border border-black h-auto w-full rounded dark:bg-gray-700"
           />
         </div>
       </div>

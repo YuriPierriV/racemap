@@ -4,7 +4,15 @@ exports.up = (pgm) => {
       type: 'serial',
       primaryKey: true,
     },
-    trace: {
+    name: {
+      type: 'varchar(100)',
+      notNull: true,
+    },
+    inner_trace: {
+      type: 'jsonb',
+      notNull: true,
+    },
+    outer_trace: {
       type: 'jsonb',
       notNull: true,
     },
