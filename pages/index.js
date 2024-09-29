@@ -5,24 +5,25 @@ import { haversineDistance } from './constants/functions';
 
 
 const MqttPage = () => {
-  const [messages, setMessages] = useState([]);
-  const [connection, setConnection] = useState(false);
-  const [mode, setMode] = useState("0");
-  const [client, setClient] = useState(null);
-  const [trace, setTrace] = useState([]);
+  const [messages, setMessages] = useState([]); //historico das mensagens do gps
+  const [connection, setConnection] = useState(false); //vizualização da conexão com o mqtt
+  const [mode, setMode] = useState("0"); //modo do gps
+  const [client, setClient] = useState(null); // conexão em si do mqtt
+  const [trace, setTrace] = useState([]); //lista de posições quando criar traçado
   const [latMin, setLatMin] = useState(Infinity);
   const [latMax, setLatMax] = useState(-Infinity);
   const [longMin, setLongMin] = useState(Infinity);
   const [longMax, setLongMax] = useState(-Infinity);
-  const canvasRef = useRef(null);
-  const [scale, setScale] = useState({ scaleX: 1, scaleY: 1 });
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-  const [savedTraces, setSavedTraces] = useState([]);
+  const [scale, setScale] = useState({ scaleX: 1, scaleY: 1 }); //escala do mapa
+  const [savedTraces, setSavedTraces] = useState([]); //Lista de todos os traçados salvos no banco de dados
   const [selectedTrace, setSelectedTrace] = useState(null); // Traçado selecionado
-  const [fiveTraces, setFiveTraces] = useState([]);
-  const [status, setStatus] = useState("aguardando");
-  const [widthCanvas, setWidthCanvas] = useState(0);
-  const [heightCanvas, setHeightCanvas] = useState(0);
+  const [fiveTraces, setFiveTraces] = useState([]); //lista das ultimas "5" ultimas posições na hora de criar um traçado, buffer para media
+  const [status, setStatus] = useState("aguardando"); //status da criação: aguardando,iniciado,externo,interno,finalização
+  const [widthCanvas, setWidthCanvas] = useState(0); //receber o valor do width do canvas responsivamente
+  const [heightCanvas, setHeightCanvas] = useState(0); //receber o valor do height do canvas responsivamente
+
+  const canvasRef = useRef(null);
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
   useEffect(() => {
     const mqttClient = mqtt.connect(connectUrl, options);
@@ -67,7 +68,7 @@ const MqttPage = () => {
               const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
 
               // Se a distância for menor que 4 metros, a nova posição será adicionada
-              if (distanceFive > 1 && distanceFive < 5) {
+              if (distanceFive > 0 && distanceFive < 50) {
                 console.log("passou   " + distanceFive)
                 updatedTraces = [position, ...prevFive]; // Adiciona a nova posição no início da lista de traçados anteriores
                 return updatedTraces; // Retorna a lista atualizada
@@ -107,7 +108,7 @@ const MqttPage = () => {
                 const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
 
                 // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-                if (distance > 2) {
+                if (distance > 0) {
 
 
                   // Atualiza os valores mínimos e máximos de latitude
@@ -135,9 +136,9 @@ const MqttPage = () => {
 
 
       } else {
-        setMessages(prevMessages => {
-          const updatedMessages = [message, ...prevMessages];
-          return updatedMessages.slice(0, 10);
+        setMessages(prevMessages => { //prevMessages é a lista de mensagens anterior
+          const updatedMessages = [message, ...prevMessages]; //lista com a mensagem nova
+          return updatedMessages.slice(0, 10); //mensagens vai virar
         });
       }
     });
@@ -203,19 +204,38 @@ const MqttPage = () => {
       drawTrace(trace, widthCanvas, heightCanvas);
     }
 
-  }, [trace]); // Dependências que devem acionar a atualização
+  }, [trace, canvasRef]); // Dependências que devem acionar a atualização
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = canvasRef.current.offsetWidth;
+        canvasRef.current.height = canvasRef.current.offsetHeight;
+      }
+    };
+
+    // Ajusta o width inicial
+    handleResize();
+
+    // Adiciona o listener para redimensionamento
+    window.addEventListener('resize', handleResize);
+
+    // Remove o listener ao desmontar o componente
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
 
 
 
   const drawTrace = (positions, width, height) => {
     const canvas = canvasRef.current;
+    console.log(canvas)
     const ctx = canvas.getContext('2d');
 
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    console.log(canvas.width)
 
-    console.log(height);
-    console.log(width);
+
     if (positions.length === 0) return;
 
     if (positions.length > 3) {
@@ -225,15 +245,15 @@ const MqttPage = () => {
     const padding = 50; // Define o padding de 20px
 
     // Calcula novas escalas considerando o padding
-    const adjustedScaleX = (width - 2 * padding) / (longMax - longMin);
-    const adjustedScaleY = (height - 2 * padding) / (latMax - latMin);
+    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax - longMin);
+    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax - latMin);
 
     ctx.beginPath();
     positions.forEach((pos, index) => {
 
       // Ajusta as coordenadas com o padding
       const x = (pos.long - longMin) * adjustedScaleX + padding;
-      const y = height - ((pos.lat - latMin) * adjustedScaleY + padding); // O canvas inverte o eixo Y, então usamos height
+      const y = canvas.height - ((pos.lat - latMin) * adjustedScaleY + padding); // O canvas inverte o eixo Y, então usamos height
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -249,7 +269,7 @@ const MqttPage = () => {
     positions.forEach((pos) => {
       // Ajusta as coordenadas dos pontos com o padding
       const x = (pos.long - longMin) * adjustedScaleX + padding;
-      const y = height - ((pos.lat - latMin) * adjustedScaleY + padding);
+      const y = canvas.height - ((pos.lat - latMin) * adjustedScaleY + padding);
 
       ctx.beginPath();
       ctx.arc(x, y, 2, 0, Math.PI * 2);
@@ -544,7 +564,7 @@ const MqttPage = () => {
 
           <canvas
             ref={canvasRef}
-            className={`border border-black dark:bg-gray-700 h-auto w-full rounded`}
+            className={`border border-black dark:bg-slate-200 h-auto w-full rounded`}
             id="tracado"
           />
 
