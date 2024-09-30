@@ -33,6 +33,9 @@ const MqttPage = () => {
 
   const [trackName, setTrackName] = useState("");
 
+  const [ctxOuter, setCtxOuter] = useState(null);
+  const [ctxInner, setCtxInner] = useState(null);
+
 
   const canvasRef = useRef(null);
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -188,7 +191,7 @@ const MqttPage = () => {
 
       if (traceToDraw.length > 0) {
 
-        drawTrace(traceToDraw); // Desenha o traçado
+        drawOuter(traceToDraw); // Desenha o traçado
       }
     };
 
@@ -197,6 +200,7 @@ const MqttPage = () => {
   }, [selectedTrace]); // Dependências que devem acionar a atualização
 
   useEffect(() => {
+
     if (trace.length > 0) {
       // Atualiza os valores mínimos e máximos diretamente no useRef
       latMin.current = Math.min(latMin.current, trace[0].lat);
@@ -209,16 +213,32 @@ const MqttPage = () => {
 
       setScale({ scaleX: newScaleX, scaleY: newScaleY });
 
-      // Chama drawTrace usando os valores de referência
-      drawTrace(trace);
+      if (status === "interno" && ctxOuter !== null) {
+        drawInner(trace);
+      }
+      if (status === "externo") {
+        // Chama drawOuter usando os valores de referência
+        drawOuter(trace);
+      }
+
+
     } else {
       latMin.current = Infinity;
       latMax.current = -Infinity;
       longMin.current = Infinity;
       longMax.current = -Infinity;
 
-      drawTrace(trace);
+      if (status === "interno" && ctxOuter !== null) {
+        drawInner(trace);
+      }
+      if (status === "externo") {
+        // Chama drawOuter usando os valores de referência
+        drawOuter(trace);
+      }
     }
+
+
+
   }, [trace]);  // Dependências que devem acionar a atualização
 
 
@@ -243,24 +263,90 @@ const MqttPage = () => {
 
 
 
-  const drawTrace = (positions) => {
+  const drawInner = (inner) => {
+    const canvas = canvasRef.current;
+    let ctx = canvas.getContext('2d'); // Reutiliza o contexto do outer
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    console.log(ctxOuter);
+    ctx = ctxOuter;
+
+    if (inner.length === 0) return;
+
+    if (inner.length > 3) {
+      inner = inner.slice(0, inner.length - 3); // Mantém todas as posições, exceto as 3 últimas
+    }
+
+    let closeTrace = false; // Variável para controlar se o desenho deve ser fechado
+
+    if (inner.length > 10) {
+      const length = inner.length - 1; // O último índice é length - 1
+      const distance = haversineDistance(inner[0].lat, inner[0].long, inner[length].lat, inner[length].long);
+      console.log(distance);
+      if (distance < 5) {
+        closeTrace = true; // Define que o desenho deve ser fechado
+      }
+    }
+
+    const padding = 50; // Define o padding de 50px
+
+    // Calcula novas escalas considerando o padding
+    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
+    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
+
+    // Desenha o inner
+    ctx.beginPath();
+    inner.forEach((pos, index) => {
+      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
+      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+
+    if (closeTrace) {
+      ctx.lineTo((inner[0].long - longMin.current) * adjustedScaleX + padding,
+        canvas.height - ((inner[0].lat - latMin.current) * adjustedScaleY + padding));
+    }
+
+    ctx.strokeStyle = 'red'; // Diferente do outer
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Desenha os pontos de inner
+    inner.forEach((pos) => {
+      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
+      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
+
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'green';
+      ctx.fill();
+    });
+  };
+
+
+
+
+  const drawOuter = (outer) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (positions.length === 0) return;
+    if (outer.length === 0) return;
 
-    if (positions.length > 3) {
-      positions = positions.slice(0, positions.length - 3); // Mantém todas as posições, exceto as 3 últimas
+    if (outer.length > 3) {
+      outer = outer.slice(0, outer.length - 3); // Mantém todas as posições, exceto as 3 últimas
     }
 
     let closeTrace = false; // Variável para controlar se o desenho deve ser fechado
 
-    if (positions.length > 10) {
-      const length = positions.length - 1; // O último índice é length - 1
-      const distance = haversineDistance(positions[0].lat, positions[0].long, positions[length].lat, positions[length].long);
-
+    if (outer.length > 10) {
+      const length = outer.length - 1; // O último índice é length - 1
+      const distance = haversineDistance(outer[0].lat, outer[0].long, outer[length].lat, outer[length].long);
+      console.log(distance);
       if (distance < 5) {
         closeTrace = true; // Define que o desenho deve ser fechado
       }
@@ -273,7 +359,7 @@ const MqttPage = () => {
     const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
 
     ctx.beginPath();
-    positions.forEach((pos, index) => {
+    outer.forEach((pos, index) => {
       // Ajusta as coordenadas com o padding
       const x = (pos.long - longMin.current) * adjustedScaleX + padding;
       const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding); // O canvas inverte o eixo Y, então usamos height
@@ -286,9 +372,18 @@ const MqttPage = () => {
 
     // Se closeTrace for verdadeiro, fecha o desenho
     if (closeTrace) {
-      ctx.lineTo((positions[0].long - longMin.current) * adjustedScaleX + padding,
-        canvas.height - ((positions[0].lat - latMin.current) * adjustedScaleY + padding));
+      ctx.lineTo((outer[0].long - longMin.current) * adjustedScaleX + padding,
+        canvas.height - ((outer[0].lat - latMin.current) * adjustedScaleY + padding));
+      setStatus("pre-interno");
+      sendMode("0");
+      setTrace([]);
+      setBuffer([]);
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      setCtxOuter(ctx);
 
+      return
     }
 
     ctx.strokeStyle = 'blue';
@@ -296,7 +391,7 @@ const MqttPage = () => {
     ctx.stroke();
 
     // Desenha pontos
-    positions.forEach((pos) => {
+    outer.forEach((pos) => {
       // Ajusta as coordenadas dos pontos com o padding
       const x = (pos.long - longMin.current) * adjustedScaleX + padding;
       const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
@@ -354,6 +449,11 @@ const MqttPage = () => {
     console.log('Traçado iniciado:', trackName);
   };
 
+  const creatInner = () => {
+    sendMode(10);
+    setStatus("interno")
+  }
+
 
   const saveTrace = () => {
     if (client) {
@@ -406,10 +506,11 @@ const MqttPage = () => {
   };
 
   const cancelTrace = () => {
-    sendMode("0");
+
     setStatus("aguardando");
     setTrace([]);
     setBuffer([]);
+    sendMode("0");
   }
 
 
@@ -436,84 +537,120 @@ const MqttPage = () => {
 
           {status !== 'aguardando' ? (
             <div>
-              <form onSubmit={creatOuter}>
-                <div className="space-y-12">
-                  <div className="border-b border-gray-900/10 pb-12">
-                    <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                      <div className="sm:col-span-2">
-                        <h2 className="text-base font-semibold leading-7 text-white">Inicie um traçado</h2>
-                        <p className="mt-1 text-sm leading-6 text-slate-400">Tenha um GPS conectado</p>
-                      </div>
-                      <div className="sm:col-span-4">
+              {status === "iniciando" && (
+                <div>
+                  <div>
+                    <form onSubmit={creatOuter}>
+                      <div className="space-y-12">
+                        <div className="border-b border-gray-900/10 pb-12">
+                          <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                            <div className="sm:col-span-2">
+                              <h2 className="text-base font-semibold leading-7 text-white">Inicie um traçado</h2>
+                              <p className="mt-1 text-sm leading-6 text-slate-400">Tenha um GPS conectado</p>
+                            </div>
+                            <div className="sm:col-span-4">
 
-                        <ol className="flex justify-center items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm dark:text-gray-400 sm:text-base dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse">
-                          <li className={`flex items-center ${status === "externo" ? "text-blue-600 dark:text-blue-500" : ""} `}>
-                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "externo" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
-                              1
-                            </span>
-                            Externo
-                            <svg className="w-3 h-3 ms-2 sm:ms-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 12 10">
-                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
-                            </svg>
-                          </li>
-                          <li className={`flex items-center ${status === "interno" ? "text-blue-600 dark:text-blue-500" : ""} `}>
-                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "interno" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
-                              2
-                            </span>
-                            Interno
-                            <svg className="w-3 h-3 ms-2 sm:ms-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 12 10">
-                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
-                            </svg>
-                          </li>
-                          <li className={`flex items-center ${status === "ajustes" ? "text-blue-600 dark:text-blue-500" : ""} `}>
-                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "ajustes" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
-                              3
-                            </span>
-                            Ajustes
-                          </li>
-                        </ol>
-
-
-                      </div>
-
-                    </div>
+                              <ol className="flex justify-center items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm dark:text-gray-400 sm:text-base dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse">
+                                <li className={`flex items-center ${status === "externo" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                                  <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "externo" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
+                                    1
+                                  </span>
+                                  Externo
+                                  <svg className="w-3 h-3 ms-2 sm:ms-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 12 10">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
+                                  </svg>
+                                </li>
+                                <li className={`flex items-center ${status === "interno" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                                  <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "interno" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
+                                    2
+                                  </span>
+                                  Interno
+                                  <svg className="w-3 h-3 ms-2 sm:ms-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 12 10">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
+                                  </svg>
+                                </li>
+                                <li className={`flex items-center ${status === "ajustes" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                                  <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "ajustes" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
+                                    3
+                                  </span>
+                                  Ajustes
+                                </li>
+                              </ol>
 
 
-                    <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
-                      <div className="sm:col-span-full">
-                        <label className="block text-sm font-medium leading-6 text-white ">
-                          Nome do traçado
-                        </label>
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            value={trackName}
-                            onChange={(e) => setTrackName(e.target.value)}
-                            placeholder="Nome do traçado"
-                            className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-0 focus:ring-inset focus:ring-blue-800 sm:text-sm sm:leading-6"
-                          />
+                            </div>
+
+                          </div>
+
+
+                          <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
+
+
+                            <div className="sm:col-span-full">
+                              <label className="block text-sm font-medium leading-6 text-white ">
+                                Nome do traçado
+                              </label>
+                              <div className="mt-2">
+                                <input
+                                  type="text"
+                                  value={trackName}
+                                  onChange={(e) => setTrackName(e.target.value)}
+                                  placeholder="Nome do traçado"
+                                  className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-0 focus:ring-inset focus:ring-blue-800 sm:text-sm sm:leading-6"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
+                              <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
+                                Cancelar
+                              </button>
+                              <button
+                                type="submit"
+                                className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                              >
+                                Iniciar
+                              </button>
+                            </div>
+
+                          </div>
+
                         </div>
                       </div>
 
-                      <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
-                        <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
-                          Cancelar
-                        </button>
-                        <button
-                          type="submit"
-                          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                        >
-                          Iniciar
-                        </button>
-                      </div>
-                    </div>
 
+                    </form>
                   </div>
                 </div>
-
-
-              </form>
+              )}
+              {status === "externo" && (
+                <div>
+                  <h2>
+                    Finalize o traçado
+                  </h2>
+                </div>
+              )}
+              {status === "pre-interno" && (
+                <div>
+                  <h2>
+                    Posicione no ponto de inicio
+                  </h2>
+                  <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
+                    <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => creatInner()}
+                      className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                    >
+                      Iniciar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
+
           ) : (
             <div>
               <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
