@@ -8,14 +8,14 @@ const MqttPage = () => {
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
   const [buffer, setBuffer] = useState([]); //lista das ultimas "5" ultimas posições na hora de criar um traçado, buffer para media
   const [trace, setTrace] = useState([]); //lista de posições quando criar traçado
-  const [confirmationPlace, setConfirmationPlace] = useState({ lat: 0, long: 0 });
+
 
 
 
   const [connection, setConnection] = useState(false); //vizualização da conexão com o mqtt
   const [client, setClient] = useState(null); // conexão em si do mqtt
 
-  const [mode, setMode] = useState("0"); //modo do gps
+  const [mode, setMode] = useState(0); //modo do gps
 
 
   const latMin = useRef(Infinity);
@@ -29,6 +29,9 @@ const MqttPage = () => {
   const [selectedTrace, setSelectedTrace] = useState(null); // Traçado selecionado
 
   const [status, setStatus] = useState("aguardando"); //status da criação: aguardando,iniciado,externo,interno,finalização
+
+
+  const [trackName, setTrackName] = useState("");
 
 
   const canvasRef = useRef(null);
@@ -80,14 +83,7 @@ const MqttPage = () => {
 
   // Cria as listas de buffer e trace
   useEffect(() => {
-    if (status === "iniciando") {
-      if (messages.length > 9 && mode !== "0") {
-        setConfirmationPlace(avgPlace(messages))
-        sendMode("0");
-        setStatus("iniciando");
-      }
-    }
-    if (mode === "Criando traçado") {
+    if (mode === 10) {
       const position = { lat: messages[0].lat, long: messages[0].long };
 
       setBuffer(prevBuffer => {
@@ -249,12 +245,9 @@ const MqttPage = () => {
 
   const drawTrace = (positions) => {
     const canvas = canvasRef.current;
-
     const ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-
 
     if (positions.length === 0) return;
 
@@ -262,7 +255,18 @@ const MqttPage = () => {
       positions = positions.slice(0, positions.length - 3); // Mantém todas as posições, exceto as 3 últimas
     }
 
-    const padding = 50; // Define o padding de 20px
+    let closeTrace = false; // Variável para controlar se o desenho deve ser fechado
+
+    if (positions.length > 10) {
+      const length = positions.length - 1; // O último índice é length - 1
+      const distance = haversineDistance(positions[0].lat, positions[0].long, positions[length].lat, positions[length].long);
+
+      if (distance < 5) {
+        closeTrace = true; // Define que o desenho deve ser fechado
+      }
+    }
+
+    const padding = 50; // Define o padding de 50px
 
     // Calcula novas escalas considerando o padding
     const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
@@ -270,7 +274,6 @@ const MqttPage = () => {
 
     ctx.beginPath();
     positions.forEach((pos, index) => {
-
       // Ajusta as coordenadas com o padding
       const x = (pos.long - longMin.current) * adjustedScaleX + padding;
       const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding); // O canvas inverte o eixo Y, então usamos height
@@ -280,6 +283,13 @@ const MqttPage = () => {
         ctx.lineTo(x, y);
       }
     });
+
+    // Se closeTrace for verdadeiro, fecha o desenho
+    if (closeTrace) {
+      ctx.lineTo((positions[0].long - longMin.current) * adjustedScaleX + padding,
+        canvas.height - ((positions[0].lat - latMin.current) * adjustedScaleY + padding));
+
+    }
 
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = 1;
@@ -302,12 +312,13 @@ const MqttPage = () => {
 
 
 
+
   const sendMode = (newMode) => {
     if (client) {
       setMode(prevMode => {
         return newMode
       });
-      client.publish('config', newMode, { qos: 2 }, (err) => {
+      client.publish('config', String(newMode), { qos: 2 }, (err) => {
         if (err) {
           console.error('Failed to publish:', err);
         }
@@ -317,7 +328,7 @@ const MqttPage = () => {
 
   const startTrace = () => {
     setStatus("iniciando");
-    sendMode("1");
+    sendMode("0");
   };
 
   const avgPlace = (lista) => {
@@ -335,16 +346,18 @@ const MqttPage = () => {
   }
 
 
+  const creatOuter = (e) => {
+    e.preventDefault(); // Evita o comportamento padrão do formulário
+    setStatus("externo");
+    sendMode(10)
+    // Adicione aqui a lógica para iniciar o traçado
+    console.log('Traçado iniciado:', trackName);
+  };
 
 
   const saveTrace = () => {
     if (client) {
-      setMode("0");
-      client.publish('config', "0", { qos: 2 }, (err) => {
-        if (err) {
-          console.error('Failed to publish:', err);
-        }
-      });
+      sendMode(0)
 
       fetch(`${BASE_URL}/api/v1/savetrace`, {
         method: "POST",
@@ -423,7 +436,7 @@ const MqttPage = () => {
 
           {status !== 'aguardando' ? (
             <div>
-              <form>
+              <form onSubmit={creatOuter}>
                 <div className="space-y-12">
                   <div className="border-b border-gray-900/10 pb-12">
                     <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -434,8 +447,8 @@ const MqttPage = () => {
                       <div className="sm:col-span-4">
 
                         <ol className="flex justify-center items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm dark:text-gray-400 sm:text-base dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse">
-                          <li className="flex items-center text-blue-600 dark:text-blue-500">
-                            <span className="flex items-center justify-center w-5 h-5 me-2 text-xs border border-blue-600 rounded-full shrink-0 dark:border-blue-500">
+                          <li className={`flex items-center ${status === "externo" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "externo" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
                               1
                             </span>
                             Externo
@@ -443,8 +456,8 @@ const MqttPage = () => {
                               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
                             </svg>
                           </li>
-                          <li className="flex items-center">
-                            <span className="flex items-center justify-center w-5 h-5 me-2 text-xs border border-gray-500 rounded-full shrink-0 dark:border-gray-400">
+                          <li className={`flex items-center ${status === "interno" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "interno" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
                               2
                             </span>
                             Interno
@@ -452,8 +465,8 @@ const MqttPage = () => {
                               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m7 9 4-4-4-4M1 9l4-4-4-4" />
                             </svg>
                           </li>
-                          <li className="flex items-center">
-                            <span className="flex items-center justify-center w-5 h-5 me-2 text-xs border border-gray-500 rounded-full shrink-0 dark:border-gray-400">
+                          <li className={`flex items-center ${status === "ajustes" ? "text-blue-600 dark:text-blue-500" : ""} `}>
+                            <span className={`flex items-center justify-center w-5 h-5 me-2 text-xs border ${status === "ajustes" ? "border-blue-600 rounded-full shrink-0 dark:border-blue-500" : "border-gray-500 rounded-full shrink-0 dark:border-gray-400"} `}>
                               3
                             </span>
                             Ajustes
@@ -473,40 +486,15 @@ const MqttPage = () => {
                         </label>
                         <div className="mt-2">
                           <input
-                            id="kartname"
-                            name="kartname"
                             type="text"
-                            autoComplete="kartname"
+                            value={trackName}
+                            onChange={(e) => setTrackName(e.target.value)}
+                            placeholder="Nome do traçado"
                             className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-0 focus:ring-inset focus:ring-blue-800 sm:text-sm sm:leading-6"
                           />
                         </div>
                       </div>
-                      <div className="sm:col-span-full mt-3">
-                        <div className="flex items-start">
-                          <input
-                            id="confirmPosition"
-                            name="confirmPosition"
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                          />
-                          <label htmlFor="confirmPosition" className="ml-3 block text-sm leading-6 text-white">
-                            Confirmo a posição inicial
-                          </label>
-                        </div>
-                      </div>
 
-                      {/* Embed do mapa */}
-                      <div className="sm:col-span-full mt-4">
-                        <label className="block text-sm font-medium leading-6 text-white">
-                          Mapa da Posição
-                        </label>
-                        <div className="mt-2">
-                          {/* adicionar iframe */}
-
-
-
-                        </div>
-                      </div>
                       <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
                         <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
                           Cancelar
@@ -573,21 +561,21 @@ const MqttPage = () => {
             <h3 className="text-xl font-semibold mb-2">Modo:</h3>
             <button
               onClick={() => sendMode('0')}
-              disabled={!connection || mode === 'Criando traçado'}
+              disabled={!connection || mode === 10}
               className="px-4 py-2 bg-red-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
             >
               Off
             </button>
             <button
               onClick={() => sendMode('1')}
-              disabled={!connection || mode === 'Criando traçado'}
+              disabled={!connection || mode === 10}
               className="px-4 py-2 bg-green-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
             >
               On
             </button>
             <button
               onClick={startTrace}
-              disabled={!connection || mode === 'Criando traçado'}
+              disabled={!connection || mode === 10}
               className="px-4 py-2 bg-blue-500 text-white rounded mr-2 disabled:opacity-50 font-bold"
             >
               Criar traçado
