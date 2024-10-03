@@ -11,3 +11,4 @@ export const haversineDistance = (lat1, long1, lat2, long2) => {
   return R * c; // Distância em metros
 };
 
+export default haversineDistance

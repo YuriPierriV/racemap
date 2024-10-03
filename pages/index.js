@@ -36,7 +36,7 @@ const MqttPage = () => {
   const [trackName, setTrackName] = useState("");
 
   const [ctxOuter, setCtxOuter] = useState(null);
-  const [ctxInner, setCtxInner] = useState(null);
+  const [ctxFull, setCtxFull] = useState(null);
 
 
   const canvasRef = useRef(null);
@@ -174,7 +174,7 @@ const MqttPage = () => {
     if (trace.length > 0) {
 
 
-      if (status === "interno" && ctxOuter !== null) {
+      if (status === "interno") {
         drawInner(trace, outerTrace);
       }
       if (status === "externo") {
@@ -193,22 +193,7 @@ const MqttPage = () => {
       }
 
 
-    } else {
-
-
-      if (status === "interno" && outerTrace.length > 0) {
-        drawInner(trace, outerTrace);
-      }
-      if (status === "externo") {
-        // Chama drawOuter usando os valores de referência
-        latMin.current = Infinity;
-        latMax.current = -Infinity;
-        longMin.current = Infinity;
-        longMax.current = -Infinity;
-        drawOuter(trace);
-      }
     }
-
 
 
   }, [trace]);  // Dependências que devem acionar a atualização
@@ -247,7 +232,7 @@ const MqttPage = () => {
       ctx.putImageData(ctxOuter.current, 0, 0); // Restaura o traçado externo
     }
 
-    if (inner.length === 0) return;
+    if (inner.length <= 3) return;
 
     if (inner.length > 3) {
       inner = inner.slice(0, inner.length - 3); // Mantém todas as posições, exceto as 3 últimas
@@ -258,12 +243,14 @@ const MqttPage = () => {
     if (inner.length > 10) {
       const length = inner.length - 1; // O último índice é length - 1
       const distance = haversineDistance(inner[0].lat, inner[0].long, inner[length].lat, inner[length].long);
+      setDistance(distance);
       if (distance < 2) {
         closeTrace = true; // Define que o desenho deve ser fechado
       }
     }
 
-    const padding = 500;
+    setMinPoints(inner.length)
+    const padding = 50;
 
     // Calcula novas escalas considerando o padding
     const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
@@ -316,23 +303,32 @@ const MqttPage = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas apenas na primeira vez
 
-    if (outer.length === 0) return;
+    if (outer.length <= 3) return;
 
     if (outer.length > 3) {
       outer = outer.slice(0, outer.length - 3); // Mantém todas as posições, exceto as 3 últimas
     }
+
+
 
     let closeTrace = false;
 
     if (outer.length > 10) {
       const length = outer.length - 1;
       const distance = haversineDistance(outer[0].lat, outer[0].long, outer[length].lat, outer[length].long);
-      setMinPoints(true);
-      setDistance(distance);
-      if (distance < 0) {
+      if (status === 'externo') {
+        setDistance(distance);
+      }
+
+      if (distance < 2) {
         closeTrace = true;
       }
     }
+
+    if (status === 'externo') {
+      setMinPoints(outer.length)
+    }
+
 
     const padding = 50;
 
@@ -364,7 +360,7 @@ const MqttPage = () => {
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.stroke();
-      setCtxOuter(ctx);
+      setCtxOuter(ctx.getImageData(0, 0, canvas.width, canvas.height))
       return;
     }
 
@@ -420,13 +416,24 @@ const MqttPage = () => {
   }
 
 
-  const creatOuter = () => {
+  const cleanMetrics = () => {
+    setDistance(102)
+    setIsConfirmed(false)
+    setMinPoints(0)
+    latMin.current = Infinity;
+    latMax.current = -Infinity;
+    longMin.current = Infinity;
+    longMax.current = -Infinity;
+  }
 
+  const creatOuter = () => {
+    cleanMetrics()
     setStatus("externo");
     sendMode(10);
   };
 
   const creatInner = () => {
+    cleanMetrics()
     setStatus("interno");
     sendMode(10);
   }
@@ -467,6 +474,7 @@ const MqttPage = () => {
     setBuffer(prevBuffer => {
       return [];
     });
+    cleanMetrics()
     sendMode(0);
     latMin.current = Infinity;
     latMax.current = -Infinity;
@@ -485,13 +493,13 @@ const MqttPage = () => {
         <div>
 
           {connection ? (
-            <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
-              <span class="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
+            <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
+              <span className="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
               Conectado
             </span>
           ) : (
-            <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300 my-3">
-              <span class="w-2 h-2 me-1 bg-red-500 rounded-full"></span>
+            <span className="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300 my-3">
+              <span className="w-2 h-2 me-1 bg-red-500 rounded-full"></span>
               Desconectado
             </span>
           )}
@@ -606,10 +614,21 @@ const MqttPage = () => {
                       <div className="border-b border-gray-900/10 pb-12">
                         <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
                           <div className="mt-3 sm:col-span-full">
+                            {minPoints >= 10 ? (
+                              <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
+                                <span className="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
+                                Adicione 10 pontos ao traçado: {minPoints} pontos
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300 my-3">
+                                <span className="w-2 h-2 me-1 bg-red-500 rounded-full"></span>
+                                Adicione 10 pontos ao traçado: {minPoints} pontos
+                              </span>
+                            )}
                             <div className="">
                               <div className="flex justify-between mb-1">
                                 <span className="text-base font-medium text-blue-700 dark:text-white">Para concluir fique menos de 2 metros do ponto inicial</span>
-                                <span className="text-sm font-medium text-blue-700 dark:text-white">{minPoints ? distance.toFixed(2) : ""} metros</span>
+                                <span className="text-sm font-medium text-blue-700 dark:text-white">{minPoints && minPoints >= 10 ? distance.toFixed(2) : ""} metros</span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-400">
                                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${102 - distance}%` }}></div>
@@ -626,7 +645,7 @@ const MqttPage = () => {
                               disabled={true}
                               className="rounded-md bg-gray-400 cursor-not-allowed px-3 py-2 text-sm font-semibold text-white shadow-sm "
                             >
-                              Iniciar Traçado interior
+                              Iniciar Traçado interno
                             </button>
                           </div>
 
@@ -640,13 +659,11 @@ const MqttPage = () => {
               {status === "pre-interno" && (
                 <div>
                   <div>
-                    <form onSubmit={creatOuter}>
+                    <form onSubmit={creatInner}>
                       <div className="space-y-12">
                         <div className="border-b border-gray-900/10 pb-12">
 
                           <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
-
-
 
                             <div className="sm:col-span-full mt-4">
                               <label className="flex items-center">
@@ -656,7 +673,7 @@ const MqttPage = () => {
                                   onChange={(e) => setIsConfirmed(e.target.checked)}
                                   className="mr-2 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-600"
                                 />
-                                Confirme estar na posição inicial da parte interna do traçado.
+                                Confirme estar na posição inicial da parte externa do traçado.
                               </label>
                             </div>
 
@@ -674,7 +691,7 @@ const MqttPage = () => {
                                   }`}
                                 disabled={!isConfirmed}
                               >
-                                Iniciar
+                                Iniciar Traçado Interno
                               </button>
                             </div>
 
@@ -689,7 +706,49 @@ const MqttPage = () => {
               {status === "interno" && (
                 <div>
                   <div>
+                    <div className="space-y-12">
+                      <div className="border-b border-gray-900/10 pb-12">
+                        <div className="mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
+                          <div className="mt-3 sm:col-span-full">
+                            {minPoints >= 10 ? (
+                              <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
+                                <span className="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
+                                Adicione 10 pontos ao traçado: {minPoints} pontos
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300 my-3">
+                                <span className="w-2 h-2 me-1 bg-red-500 rounded-full"></span>
+                                Adicione 10 pontos ao traçado: {minPoints} pontos
+                              </span>
+                            )}
+                            <div className="">
+                              <div className="flex justify-between mb-1">
+                                <span className="text-base font-medium text-blue-700 dark:text-white">Para concluir fique menos de 2 metros do ponto inicial</span>
+                                <span className="text-sm font-medium text-blue-700 dark:text-white">{minPoints && minPoints >= 10 ? distance.toFixed(2) : ""} metros</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-400">
+                                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${102 - distance}%` }}></div>
+                              </div>
+                            </div>
 
+
+                          </div>
+                          <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
+                            <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
+                              Cancelar
+                            </button>
+                            <button
+                              disabled={true}
+                              className="rounded-md bg-gray-400 cursor-not-allowed px-3 py-2 text-sm font-semibold text-white shadow-sm "
+                            >
+                              Ajustar
+                            </button>
+                          </div>
+
+                        </div>
+
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
