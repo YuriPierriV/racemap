@@ -31,6 +31,9 @@ const MqttPage = () => {
   const [distance, setDistance] = useState(102);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
+  const [padding, setPadding] = useState(50);
+  const [curveIntensity, setCurveIntensity] = useState(0.2);
+
 
 
   const [trackName, setTrackName] = useState("");
@@ -88,16 +91,28 @@ const MqttPage = () => {
 
   }, [client]);
 
+  useEffect(() => {
+    if (status === "ajustes") {
+      drawFull(innerTrace, outerTrace, padding, curveIntensity)
+    }
+
+  }, [padding, curveIntensity]);
+
   // Cria as listas de buffer e trace
   useEffect(() => {
     if (mode === 10) {
+      if (status === "ajustes") {
+        drawFull(innerTrace, outerTrace, 50);
+        sendMode(0);
+        return
+      }
       const position = { lat: messages[0].lat, long: messages[0].long };
 
       setBuffer(prevBuffer => {
         let updatedTraces; // Variável que vai armazenar as novas posições atualizadas
 
         // Verifica se a lista de traçados anteriores (prevBuffer) tem menos que 5 posições
-        if (prevBuffer.length < 10) {
+        if (prevBuffer.length < 5) {
           // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
           if (prevBuffer.length == 0) {
             return [position];
@@ -114,7 +129,7 @@ const MqttPage = () => {
             const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
 
             // Se a distância for menor que 4 metros, a nova posição será adicionada
-            if (distanceFive > 0 && distanceFive < 50) {
+            if (distanceFive > 1 && distanceFive < 50) {
 
               updatedTraces = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
               return updatedTraces; // Retorna a lista atualizada
@@ -148,7 +163,7 @@ const MqttPage = () => {
               const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
 
               // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-              if (distance > 0) {
+              if (distance > 2) {
 
 
                 return [avgPosition, ...prevTrace]; // Adiciona a média ao início da lista de 'trace'
@@ -217,6 +232,74 @@ const MqttPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const drawFull = (inner, outer, padding = 50, curveIntensity = 0.2) => {
+    const canvas = canvasRef.current;
+    let ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (outer.length > 3 && inner.length > 3) {
+      outer = outer.slice(0, outer.length - 3); // Mantém todas as posições, exceto as 3 últimas
+      inner = inner.slice(0, inner.length - 3);
+    }
+
+    // Calcula novas escalas considerando o padding
+    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
+    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
+
+    const drawCurvedPath = (path, color) => {
+      ctx.beginPath();
+      let closeTrace = false;
+
+      if (path.length > 10) {
+        const length = path.length - 1;
+        const distance = haversineDistance(path[0].lat, path[0].long, path[length].lat, path[length].long);
+        if (distance < 2) {
+          closeTrace = true; // Fechar o traçado
+        }
+      }
+
+      path.forEach((pos, index) => {
+        const x = (pos.long - longMin.current) * adjustedScaleX + padding;
+        const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
+
+        if (index === 0) {
+          ctx.moveTo(x, y); // Começa a partir do primeiro ponto
+        } else {
+          const prev = path[index - 1];
+          const prevX = (prev.long - longMin.current) * adjustedScaleX + padding;
+          const prevY = canvas.height - ((prev.lat - latMin.current) * adjustedScaleY + padding);
+
+          const midX = (prevX + x) / 2;
+          const midY = (prevY + y) / 2;
+
+          // Ajuste os pontos de controle para aumentar ou diminuir a suavidade da curva
+          const controlX = prevX + (x - prevX) * curveIntensity;
+          const controlY = prevY + (y - prevY) * curveIntensity;
+
+          ctx.quadraticCurveTo(controlX, controlY, midX, midY); // Curva entre dois pontos
+        }
+      });
+
+      if (closeTrace) {
+        const first = path[0];
+        const firstX = (first.long - longMin.current) * adjustedScaleX + padding;
+        const firstY = canvas.height - ((first.lat - latMin.current) * adjustedScaleY + padding);
+        ctx.lineTo(firstX, firstY); // Fecha o traçado
+      }
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
+
+    // Desenha o inner com suavização
+    drawCurvedPath(inner, 'white');
+
+    // Desenha o outer com suavização
+    drawCurvedPath(outer, 'red'); // Exemplo, cor diferente para outer
+  };
+
 
 
 
@@ -272,7 +355,7 @@ const MqttPage = () => {
       ctx.lineTo((inner[0].long - longMin.current) * adjustedScaleX + padding,
         canvas.height - ((inner[0].lat - latMin.current) * adjustedScaleY + padding));
       setStatus("ajustes");
-      sendMode("0");
+      setInnerTrace(trace);
       setTrace([]);
       setBuffer([]);
       ctx.strokeStyle = 'white';
@@ -420,10 +503,7 @@ const MqttPage = () => {
     setDistance(102)
     setIsConfirmed(false)
     setMinPoints(0)
-    latMin.current = Infinity;
-    latMax.current = -Infinity;
-    longMin.current = Infinity;
-    longMax.current = -Infinity;
+
   }
 
   const creatOuter = () => {
@@ -754,8 +834,41 @@ const MqttPage = () => {
               )}
               {status === "ajustes" && (
                 <div>
-                  <div>
+                  <div className='mt-5  grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm'>
+                    <div className="mt-3 sm:col-span-full">
+                      <div className="flex flex-col space-y-4">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Ajustar Padding
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={padding}
+                          onChange={(e) => setPadding(Number(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        />
+                        <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+                          Valor atual: {padding}
+                        </span>
 
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Ajustar Intensidade da Curva
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={curveIntensity}
+                          onChange={(e) => setCurveIntensity(Number(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        />
+                        <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+                          Valor atual: {curveIntensity}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
