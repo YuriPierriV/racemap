@@ -243,6 +243,7 @@ const MqttPage = () => {
 
   const drawFull = (inner, outer, padding = 50, curveIntensity = 0.2) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     let ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -314,6 +315,7 @@ const MqttPage = () => {
 
   const drawInner = (inner, outer) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     let ctx = canvas.getContext('2d');
 
     // Desenha o outer apenas se ele ainda não foi desenhado
@@ -391,6 +393,7 @@ const MqttPage = () => {
 
   const drawOuter = (outer) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas apenas na primeira vez
