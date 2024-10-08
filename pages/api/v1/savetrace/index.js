@@ -1,20 +1,28 @@
 import database from "infra/database.js";
 
 async function saveTrace(request, response) {
-  const trace = request.body; // Supondo que o traçado seja um array de posições [{lat, long}, ...]
+  const { name, inner_trace, outer_trace, padding, curveintensity } = request.body;
 
-  if (!trace || !Array.isArray(trace) || trace.length === 0) {
+  // Valida se os campos essenciais estão presentes
+  if (!name || !inner_trace || !outer_trace || padding === undefined || curveintensity === undefined) {
     return response.status(400).json({ error: 'Invalid trace data' });
   }
 
   try {
     const insertQuery = `
-      INSERT INTO tracks (trace)
-      VALUES ($1)
-      RETURNING id
+      INSERT INTO tracks (name, inner_trace, outer_trace, padding, curveintensity, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING id;
     `;
 
-    const values = [JSON.stringify(trace)];
+    const values = [
+      name,
+      JSON.stringify(inner_trace), // Convertendo os traçados para string JSON
+      JSON.stringify(outer_trace),
+      padding,
+      curveintensity,
+    ];
+
     const result = await database.query({
       text: insertQuery,
       values: values,
