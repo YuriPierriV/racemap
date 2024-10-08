@@ -16,6 +16,14 @@ exports.up = (pgm) => {
       type: 'jsonb',
       notNull: true,
     },
+    padding: {
+      type: 'integer',
+      notNull: true,
+    },
+    curveintensity: {
+      type: 'float',
+      notNull: true,
+    },
     created_at: {
       type: 'timestamp',
       default: pgm.func('current_timestamp'),
