@@ -2,6 +2,7 @@ import mqtt from 'mqtt';
 import React, { useEffect, useState, useRef } from 'react';
 import { connectUrl, options } from 'infra/mqttConfig.js';
 import { haversineDistance } from './constants/functions';
+import { useRouter } from 'next/router';
 
 
 const MqttPage = () => {
@@ -10,8 +11,8 @@ const MqttPage = () => {
   const [trace, setTrace] = useState([]); //lista de posições quando criar traçado
 
 
-  const [outerTrace, setOuterTrace] = useState([]); //lista de posições quando criar traçado
-  const [innerTrace, setInnerTrace] = useState([]); //lista de posições quando criar traçado
+  const [outerTrace, setOuterTrace] = useState([]); //lista de posições quando criar traçado 1
+  const [innerTrace, setInnerTrace] = useState([]); //lista de posições quando criar traçado 2
   const [connection, setConnection] = useState(false); //vizualização da conexão com o mqtt
   const [client, setClient] = useState(null); // conexão em si do mqtt
 
@@ -31,12 +32,12 @@ const MqttPage = () => {
   const [distance, setDistance] = useState(102);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const [padding, setPadding] = useState(50);
-  const [curveIntensity, setCurveIntensity] = useState(0.2);
+  const [padding, setPadding] = useState(50); // 3
+  const [curveIntensity, setCurveIntensity] = useState(0.2); // 4
 
 
 
-  const [trackName, setTrackName] = useState("");
+  const [trackName, setTrackName] = useState(""); // 5
 
   const [ctxOuter, setCtxOuter] = useState(null);
   const [ctxFull, setCtxFull] = useState(null);
@@ -44,6 +45,7 @@ const MqttPage = () => {
 
   const canvasRef = useRef(null);
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+  const router = useRouter();
   //fica conectado 
   useEffect(() => {
     const mqttClient = mqtt.connect(connectUrl, options);
@@ -68,9 +70,15 @@ const MqttPage = () => {
     mqttClient.on('close', () => {
       console.log('Connection closed');
       setConnection(false);
+      return () => {
+        console.log("passou")
+        mqttClient.end();
+        cancelTrace();
+      };
     });
 
     return () => {
+
       mqttClient.end();
       cancelTrace();
     };
@@ -88,6 +96,7 @@ const MqttPage = () => {
         });
       });
     };
+    return
 
   }, [client]);
 
@@ -129,7 +138,7 @@ const MqttPage = () => {
             const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
 
             // Se a distância for menor que 4 metros, a nova posição será adicionada
-            if (distanceFive > 1 && distanceFive < 50) {
+            if (distanceFive > 0 && distanceFive < 50) {
 
               updatedTraces = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
               return updatedTraces; // Retorna a lista atualizada
@@ -163,7 +172,7 @@ const MqttPage = () => {
               const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
 
               // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-              if (distance > 2) {
+              if (distance > 0) {
 
 
                 return [avgPosition, ...prevTrace]; // Adiciona a média ao início da lista de 'trace'
@@ -327,7 +336,7 @@ const MqttPage = () => {
       const length = inner.length - 1; // O último índice é length - 1
       const distance = haversineDistance(inner[0].lat, inner[0].long, inner[length].lat, inner[length].long);
       setDistance(distance);
-      if (distance < 2) {
+      if (distance < 100) {
         closeTrace = true; // Define que o desenho deve ser fechado
       }
     }
@@ -403,7 +412,7 @@ const MqttPage = () => {
         setDistance(distance);
       }
 
-      if (distance < 2) {
+      if (distance < 100) {
         closeTrace = true;
       }
     }
@@ -521,30 +530,42 @@ const MqttPage = () => {
 
   const saveTrace = () => {
     if (client) {
-      sendMode(0)
+      sendMode(0);
+
+      // Certifique-se de que 'trace' inclua os valores de 'padding' e 'curveintensity'
+      const traceData = {
+        name: trackName, // ou algum outro valor relevante para 'name'
+        inner_trace: innerTrace,
+        outer_trace: outerTrace,
+        padding: padding, // novo campo de padding
+        curveintensity: curveIntensity, // novo campo de curveintensity
+      };
+      console.log(traceData)
 
       fetch(`${BASE_URL}/api/v1/savetrace`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(trace),
+        body: JSON.stringify(traceData),
       })
         .then((response) => {
           if (!response.ok) {
             throw new Error("Failed to save trace");
           }
+
           return response.json();
         })
         .then((data) => {
           console.log("Trace saved successfully:", data);
-          //selectTrace(data.trackId);
+          goToLista()
         })
         .catch((error) => {
           console.error("Error saving trace:", error);
         });
     }
   };
+
 
 
   const cancelTrace = () => {
@@ -554,16 +575,36 @@ const MqttPage = () => {
     setBuffer(prevBuffer => {
       return [];
     });
+    setTrackName("");
+    setInnerTrace([]);
+    setOuterTrace([]);
+    setPadding(50);
+    setCurveIntensity(0.2);
     cleanMetrics()
     sendMode(0);
     latMin.current = Infinity;
     latMax.current = -Infinity;
     longMin.current = Infinity;
     longMax.current = -Infinity;
-    drawOuter(outerTrace);
+    drawOuter([]);
     setStatus("aguardando");
 
   }
+
+  const goToLista = async () => {
+    // Se o cliente MQTT estiver conectado, desconecte antes de navegar
+    if (client) {
+      console.log("passou aq")
+      client.end(); // Finaliza a conexão MQTT
+      setConnection(false); // Atualiza o estado da conexão
+    }
+
+    // Aguarde um tempo para garantir que o cliente esteja desconectado
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Ajuste o tempo conforme necessário
+
+    // Agora pode fazer o push para /lista
+    router.push('/lista');
+  };
 
 
 
@@ -867,7 +908,21 @@ const MqttPage = () => {
                         <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
                           Valor atual: {curveIntensity}
                         </span>
+
+
                       </div>
+                    </div>
+                    <div className="mt-3 sm:col-span-full mx-10 flex items-center justify-end gap-x-6">
+                      <button type="button" className="text-sm font-semibold leading-6 text-gray-400" onClick={() => cancelTrace()}>
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={saveTrace}
+                        disabled={!connection || mode === 10 || mode === 10}
+                        className="px-6 py-2 bg-blue-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                      >
+                        Salvar Traçado
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -945,6 +1000,13 @@ const MqttPage = () => {
                 >
                   Criar Traçado
                 </button>
+                <button
+                  onClick={goToLista}
+                  className="px-6 py-2 bg-yellow-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  Traçados salvos
+                </button>
+
 
               </div>
             </>
