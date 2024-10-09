@@ -1,39 +1,43 @@
 import database from "infra/database.js";
 
-async function saveTrace(request, response) {
-  const { name, inner_trace, outer_trace, padding, curveintensity } = request.body;
+export default async function saveTrace(req, res) {
+  if (req.method === 'POST') {
+    const { name, inner_trace, outer_trace, padding, curveintensity } = req.body;
 
-  // Valida se os campos essenciais estão presentes
-  if (!name || !inner_trace || !outer_trace || padding === undefined || curveintensity === undefined) {
-    return response.status(400).json({ error: 'Invalid trace data' });
-  }
+    // Valida se os campos essenciais estão presentes
+    if (!name || !inner_trace || !outer_trace || padding === undefined || curveintensity === undefined) {
+      return res.status(400).json({ error: 'Invalid trace data' });
+    }
 
-  try {
-    const insertQuery = `
-      INSERT INTO tracks (name, inner_trace, outer_trace, padding, curveintensity, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING id;
-    `;
+    try {
+      const insertQuery = `
+        INSERT INTO tracks (name, inner_trace, outer_trace, padding, curveintensity, created_at)
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        RETURNING id;
+      `;
 
-    const values = [
-      name,
-      JSON.stringify(inner_trace), // Convertendo os traçados para string JSON
-      JSON.stringify(outer_trace),
-      padding,
-      curveintensity,
-    ];
+      const values = [
+        name,
+        JSON.stringify(inner_trace), // Convertendo os traçados para string JSON
+        JSON.stringify(outer_trace),
+        padding,
+        curveintensity,
+      ];
 
-    const result = await database.query({
-      text: insertQuery,
-      values: values,
-    });
+      const result = await database.query({
+        text: insertQuery,
+        values: values,
+      });
 
-    const trackId = result.rows[0].id; // Captura o ID do track recém-criado
-    response.status(201).json({ message: 'Trace saved successfully', trackId });
-  } catch (err) {
-    console.error('Error saving trace data:', err.message);
-    response.status(500).json({ error: 'Error saving trace data' });
+      const trackId = result.rows[0].id; // Captura o ID do track recém-criado
+      res.status(201).json({ message: 'Trace saved successfully', trackId });
+    } catch (err) {
+      console.error('Error saving trace data:', err.message);
+      res.status(500).json({ error: 'Error saving trace data' });
+    }
+  } else {
+    // Método HTTP não suportado
+    res.status(405).json({ error: 'Metodo Não Suportado' });
   }
 }
 
-export default saveTrace;
