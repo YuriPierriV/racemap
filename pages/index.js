@@ -1,8 +1,11 @@
 import mqtt from 'mqtt';
 import React, { useEffect, useState, useRef } from 'react';
 import { connectUrl, options } from 'infra/mqttConfig.js';
-import { haversineDistance } from './constants/functions';
+import { drawTrace, drawFull } from './utils/canvasUtils';
 import { useRouter } from 'next/router';
+import { BASE_URL } from './utils/config';
+import { haversineDistance } from './utils/distance';
+import { distanceMin, pointsMin } from "pages/constants/distances";
 
 
 const MqttPage = () => {
@@ -44,7 +47,6 @@ const MqttPage = () => {
 
 
   const canvasRef = useRef(null);
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const router = useRouter();
   //fica conectado 
   useEffect(() => {
@@ -102,7 +104,7 @@ const MqttPage = () => {
 
   useEffect(() => {
     if (status === "ajustes") {
-      drawFull(innerTrace, outerTrace, padding, curveIntensity)
+      drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity)
     }
 
   }, [padding, curveIntensity]);
@@ -111,7 +113,7 @@ const MqttPage = () => {
   useEffect(() => {
     if (mode === 10) {
       if (status === "ajustes") {
-        drawFull(innerTrace, outerTrace, 50);
+        drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity)
         sendMode(0);
         return
       }
@@ -195,28 +197,52 @@ const MqttPage = () => {
 
   useEffect(() => {
 
-    if (trace.length > 0) {
+    if (trace.length <= 3) return;
 
-
-      if (status === "interno") {
-        drawInner(trace, outerTrace);
+    const tracado = trace.slice(0, trace.length - 3);
+    setMinPoints(tracado.length)
+    if (tracado.length >= pointsMin) {
+      const length = tracado.length - 1;
+      const distance = haversineDistance(tracado[0].lat, tracado[0].long, tracado[length].lat, tracado[length].long);
+      setDistance(distance)
+      if (distance < distanceMin) {
+        if (status === "interno") {
+          drawTrace(canvasRef, status, true, outerTrace, tracado, ctxOuter, padding);
+          sendMode(0);
+          setStatus("ajustes");
+          setInnerTrace(tracado);
+          setTrace([]);
+          setBuffer([]);
+          return
+        }
+        if (status === "externo") {
+          setStatus("pre-interno");
+          sendMode("0");
+          setOuterTrace(tracado);
+          setTrace([]);
+          setBuffer([]);
+          drawTrace(canvasRef, status, true, tracado, innerTrace, ctxOuter, padding);
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext('2d');
+          setCtxOuter(ctx.getImageData(0, 0, canvas.width, canvas.height));
+          return
+        }
       }
-      if (status === "externo") {
-        // Atualiza os valores mínimos e máximos diretamente no useRef
-        latMin.current = Math.min(latMin.current, trace[0].lat);
-        latMax.current = Math.max(latMax.current, trace[0].lat);
-        longMin.current = Math.min(longMin.current, trace[0].long);
-        longMax.current = Math.max(longMax.current, trace[0].long);
+    }
 
-        const newScaleX = canvasRef.current.width / (longMax.current - longMin.current);
-        const newScaleY = canvasRef.current.height / (latMax.current - latMin.current);
 
-        setScale({ scaleX: newScaleX, scaleY: newScaleY });
-        // Chama drawOuter usando os valores de referência
-        drawOuter(trace);
+    if (status === "interno") {
+      const ctx = drawTrace(canvasRef, status, false, outerTrace, tracado, ctxOuter, padding);
+      if (ctx === 'get ctx') {
+        drawTrace(canvasRef, status, true, tracado, innerTrace, ctxOuter, padding);
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        setCtxOuter(ctx.getImageData(0, 0, canvas.width, canvas.height));
       }
+    }
+    if (status === "externo") {
 
-
+      drawTrace(canvasRef, status, false, tracado, innerTrace, ctxOuter, padding);
     }
 
 
@@ -240,241 +266,6 @@ const MqttPage = () => {
     // Remove o listener ao desmontar o componente
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const drawFull = (inner, outer, padding = 50, curveIntensity = 0.2) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    let ctx = canvas.getContext('2d');
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (outer.length > 3 && inner.length > 3) {
-      outer = outer.slice(0, outer.length - 3); // Mantém todas as posições, exceto as 3 últimas
-      inner = inner.slice(0, inner.length - 3);
-    }
-
-    // Calcula novas escalas considerando o padding
-    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
-    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
-
-    const drawCurvedPath = (path, color) => {
-      ctx.beginPath();
-      let closeTrace = false;
-
-      if (path.length > 10) {
-        const length = path.length - 1;
-        const distance = haversineDistance(path[0].lat, path[0].long, path[length].lat, path[length].long);
-        if (distance < 2) {
-          closeTrace = true; // Fechar o traçado
-        }
-      }
-
-      path.forEach((pos, index) => {
-        const x = (pos.long - longMin.current) * adjustedScaleX + padding;
-        const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
-
-        if (index === 0) {
-          ctx.moveTo(x, y); // Começa a partir do primeiro ponto
-        } else {
-          const prev = path[index - 1];
-          const prevX = (prev.long - longMin.current) * adjustedScaleX + padding;
-          const prevY = canvas.height - ((prev.lat - latMin.current) * adjustedScaleY + padding);
-
-          const midX = (prevX + x) / 2;
-          const midY = (prevY + y) / 2;
-
-          // Ajuste os pontos de controle para aumentar ou diminuir a suavidade da curva
-          const controlX = prevX + (x - prevX) * curveIntensity;
-          const controlY = prevY + (y - prevY) * curveIntensity;
-
-          ctx.quadraticCurveTo(controlX, controlY, midX, midY); // Curva entre dois pontos
-        }
-      });
-
-      if (closeTrace) {
-        const first = path[0];
-        const firstX = (first.long - longMin.current) * adjustedScaleX + padding;
-        const firstY = canvas.height - ((first.lat - latMin.current) * adjustedScaleY + padding);
-        ctx.lineTo(firstX, firstY); // Fecha o traçado
-      }
-
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    };
-
-    // Desenha o inner com suavização
-    drawCurvedPath(inner, 'white');
-
-    // Desenha o outer com suavização
-    drawCurvedPath(outer, 'red'); // Exemplo, cor diferente para outer
-  };
-
-
-
-
-  const drawInner = (inner, outer) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    let ctx = canvas.getContext('2d');
-
-    // Desenha o outer apenas se ele ainda não foi desenhado
-    if (!ctxOuter.current) {
-      drawOuter(outer);  // Desenha o traçado externo
-      ctxOuter.current = ctx.getImageData(0, 0, canvas.width, canvas.height); // Salva o estado do outer
-    } else {
-      ctx.putImageData(ctxOuter.current, 0, 0); // Restaura o traçado externo
-    }
-
-    if (inner.length <= 3) return;
-
-    if (inner.length > 3) {
-      inner = inner.slice(0, inner.length - 3); // Mantém todas as posições, exceto as 3 últimas
-    }
-
-    let closeTrace = false; // Variável para controlar se o desenho deve ser fechado
-
-    if (inner.length > 10) {
-      const length = inner.length - 1; // O último índice é length - 1
-      const distance = haversineDistance(inner[0].lat, inner[0].long, inner[length].lat, inner[length].long);
-      setDistance(distance);
-      if (distance < 100) {
-        closeTrace = true; // Define que o desenho deve ser fechado
-      }
-    }
-
-    setMinPoints(inner.length)
-    const padding = 50;
-
-    // Calcula novas escalas considerando o padding
-    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
-    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
-
-    // Desenha o inner
-    ctx.beginPath();
-    inner.forEach((pos, index) => {
-      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
-      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    if (closeTrace) {
-      ctx.lineTo((inner[0].long - longMin.current) * adjustedScaleX + padding,
-        canvas.height - ((inner[0].lat - latMin.current) * adjustedScaleY + padding));
-      setStatus("ajustes");
-      setInnerTrace(trace);
-      setTrace([]);
-      setBuffer([]);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      return;
-    }
-
-    ctx.strokeStyle = 'white'; // Diferente do outer
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Desenha os pontos de inner
-    inner.forEach((pos) => {
-      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
-      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
-
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    });
-  };
-
-  const drawOuter = (outer) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas apenas na primeira vez
-
-    if (outer.length <= 3) return;
-
-    if (outer.length > 3) {
-      outer = outer.slice(0, outer.length - 3); // Mantém todas as posições, exceto as 3 últimas
-    }
-
-
-
-    let closeTrace = false;
-
-    if (outer.length > 10) {
-      const length = outer.length - 1;
-      const distance = haversineDistance(outer[0].lat, outer[0].long, outer[length].lat, outer[length].long);
-      if (status === 'externo') {
-        setDistance(distance);
-      }
-
-      if (distance < 100) {
-        closeTrace = true;
-      }
-    }
-
-    if (status === 'externo') {
-      setMinPoints(outer.length)
-    }
-
-
-    const padding = 50;
-
-    const adjustedScaleX = (canvas.width - 2 * padding) / (longMax.current - longMin.current);
-    const adjustedScaleY = (canvas.height - 2 * padding) / (latMax.current - latMin.current);
-
-    ctx.beginPath();
-    outer.forEach((pos, index) => {
-      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
-      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    if (closeTrace) {
-      ctx.lineTo((outer[0].long - longMin.current) * adjustedScaleX + padding,
-        canvas.height - ((outer[0].lat - latMin.current) * adjustedScaleY + padding));
-      if (status === 'externo') {
-        setStatus("pre-interno");
-        sendMode("0");
-        setOuterTrace(trace);
-        setTrace([]);
-        setBuffer([]);
-      }
-
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      setCtxOuter(ctx.getImageData(0, 0, canvas.width, canvas.height))
-      return;
-    }
-
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Desenha pontos do outer
-    outer.forEach((pos) => {
-      const x = (pos.long - longMin.current) * adjustedScaleX + padding;
-      const y = canvas.height - ((pos.lat - latMin.current) * adjustedScaleY + padding);
-
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    });
-  };
-
 
 
 
@@ -589,21 +380,13 @@ const MqttPage = () => {
     latMax.current = -Infinity;
     longMin.current = Infinity;
     longMax.current = -Infinity;
-    drawOuter([]);
+    drawTrace(canvasRef, "externo", false, []);
     setStatus("aguardando");
 
   }
 
   const goToLista = async () => {
     // Se o cliente MQTT estiver conectado, desconecte antes de navegar
-    if (client) {
-      console.log("passou aq")
-      client.end(); // Finaliza a conexão MQTT
-      setConnection(false); // Atualiza o estado da conexão
-    }
-
-    // Aguarde um tempo para garantir que o cliente esteja desconectado
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Ajuste o tempo conforme necessário
 
     // Agora pode fazer o push para /lista
     router.push('/lista');
@@ -615,7 +398,6 @@ const MqttPage = () => {
     <main className="bg-slate-700">
       <div className="grid 2xl:grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
         <div>
-
           {connection ? (
             <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
               <span className="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
@@ -1031,7 +813,6 @@ const MqttPage = () => {
         </div>
       </div>
     </main>
-
 
   );
 
