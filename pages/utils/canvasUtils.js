@@ -23,7 +23,7 @@ const getBounds = (outer) => {
   return bounds;
 };
 
-export const drawFull = (canvasRef, inner, outer, padding = 50, curveIntensity = 0.2) => {
+export const drawFull = (canvasRef, inner, outer, padding = 50, curveIntensity = 0.2, rotation = 0) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -35,6 +35,22 @@ export const drawFull = (canvasRef, inner, outer, padding = 50, curveIntensity =
   const adjustedScaleX = (canvas.width - 2 * padding) / (bounds.longMax - bounds.longMin);
   const adjustedScaleY = (canvas.height - 2 * padding) / (bounds.latMax - bounds.latMin);
 
+  const rotationAngle = (rotation * Math.PI) / 180;
+
+  // Função para rotacionar um ponto em torno do centro do canvas
+  const rotatePoint = (x, y) => {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    const dx = x - centerX;
+    const dy = y - centerY;
+
+    const rotatedX = centerX + dx * Math.cos(rotationAngle) - dy * Math.sin(rotationAngle);
+    const rotatedY = centerY + dx * Math.sin(rotationAngle) + dy * Math.cos(rotationAngle);
+
+    return { x: rotatedX, y: rotatedY };
+  };
+
   const drawCurvedPath = (path, color) => {
     ctx.beginPath();
 
@@ -42,27 +58,36 @@ export const drawFull = (canvasRef, inner, outer, padding = 50, curveIntensity =
       const x = (pos.long - bounds.longMin) * adjustedScaleX + padding;
       const y = canvas.height - ((pos.lat - bounds.latMin) * adjustedScaleY + padding);
 
+      // Aplica a rotação no ponto
+      const { x: rotatedX, y: rotatedY } = rotatePoint(x, y);
+
       if (index === 0) {
-        ctx.moveTo(x, y);
+        ctx.moveTo(rotatedX, rotatedY);
       } else {
         const prev = path[index - 1];
         const prevX = (prev.long - bounds.longMin) * adjustedScaleX + padding;
         const prevY = canvas.height - ((prev.lat - bounds.latMin) * adjustedScaleY + padding);
 
-        const midX = (prevX + x) / 2;
-        const midY = (prevY + y) / 2;
+        // Aplica a rotação no ponto anterior
+        const { x: prevRotatedX, y: prevRotatedY } = rotatePoint(prevX, prevY);
 
-        const controlX = prevX + (x - prevX) * curveIntensity;
-        const controlY = prevY + (y - prevY) * curveIntensity;
+        const midX = (prevRotatedX + rotatedX) / 2;
+        const midY = (prevRotatedY + rotatedY) / 2;
+
+        const controlX = prevRotatedX + (rotatedX - prevRotatedX) * curveIntensity;
+        const controlY = prevRotatedY + (rotatedY - prevRotatedY) * curveIntensity;
 
         ctx.quadraticCurveTo(controlX, controlY, midX, midY);
       }
     });
 
+    // Conclui a curva para o ponto inicial
     const first = path[0];
     const firstX = (first.long - bounds.longMin) * adjustedScaleX + padding;
     const firstY = canvas.height - ((first.lat - bounds.latMin) * adjustedScaleY + padding);
-    ctx.lineTo(firstX, firstY);
+    const { x: firstRotatedX, y: firstRotatedY } = rotatePoint(firstX, firstY);
+
+    ctx.lineTo(firstRotatedX, firstRotatedY);
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -73,8 +98,10 @@ export const drawFull = (canvasRef, inner, outer, padding = 50, curveIntensity =
   drawCurvedPath(inner, 'white');
 
   // Desenha o outer com suavização
-  drawCurvedPath(outer, 'red'); // Exemplo, cor diferente para outer
+  drawCurvedPath(outer, 'white'); // Exemplo, cor diferente para outer
 };
+
+
 
 
 export const drawTrace = (canvasRef, status, closeTrace = false, outer, inner = [], ctxOuter = null, padding = 50) => {

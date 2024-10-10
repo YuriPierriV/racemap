@@ -37,6 +37,7 @@ const MqttPage = () => {
 
   const [padding, setPadding] = useState(50); // 3
   const [curveIntensity, setCurveIntensity] = useState(0.2); // 4
+  const [rotation, setRotation] = useState(0);
 
 
 
@@ -104,16 +105,16 @@ const MqttPage = () => {
 
   useEffect(() => {
     if (status === "ajustes") {
-      drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity)
+      drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity, rotation)
     }
 
-  }, [padding, curveIntensity]);
+  }, [padding, curveIntensity, rotation, status]);
 
   // Cria as listas de buffer e trace
   useEffect(() => {
     if (mode === 10) {
       if (status === "ajustes") {
-        drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity)
+        drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity, rotation)
         sendMode(0);
         return
       }
@@ -692,6 +693,21 @@ const MqttPage = () => {
                         />
                         <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
                           Valor atual: {curveIntensity}
+                        </span>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Ajustar Rotação
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="360"
+                          step="1"
+                          value={rotation}
+                          onChange={(e) => setRotation(Number(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        />
+                        <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+                          Valor atual: {rotation}
                         </span>
 
 
