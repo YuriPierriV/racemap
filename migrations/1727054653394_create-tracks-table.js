@@ -28,6 +28,15 @@ exports.up = (pgm) => {
       type: 'timestamp',
       default: pgm.func('current_timestamp'),
     },
+    rotation: {
+      type: 'integer',
+      notNull: true,
+    },
+  });
+
+  // Adiciona uma restrição CHECK para garantir que rotation esteja entre 0 e 360
+  pgm.addConstraint('tracks', 'rotation_check', {
+    check: 'rotation >= 0 AND rotation <= 360',
   });
 };
 

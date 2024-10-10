@@ -1,27 +1,69 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BASE_URL } from 'pages/utils/config';
+import { drawFull, drawTrace } from 'pages/utils/canvasUtils';
 
 export default function Lista() {
   const [listTrace, setListTrace] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(null); // Estado para controlar dropdowns
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [selectedTrace, setSelectedTrace] = useState(null); // Traçado selecionado
+  const [outerTrace, setOuterTrace] = useState([]);
+  const [innerTrace, setInnerTrace] = useState([]);
+  const [padding, setPadding] = useState(50);
+  const [curveIntensity, setCurveIntensity] = useState(0.2);
 
   const canvasRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     fetchListTrace();
+  }, []);
+
+  useEffect(() => {
+
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        buttonRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = canvasRef.current.offsetWidth;
+        canvasRef.current.height = canvasRef.current.offsetHeight;
+      }
+    };
+
+    // Ajusta o width inicial
+    handleResize();
+
+    // Adiciona o listener para redimensionamento
+    window.addEventListener('resize', handleResize);
+
+    // Remove o listener ao desmontar o componente
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchListTrace = async () => {
     try {
       const response = await fetch(`${BASE_URL}/api/v1/getsavedtraces`);
       const data = await response.json();
-
-      // Ajustar o horário subtraindo 3 horas
       const adjustedData = data.map(trace => ({
         ...trace,
-        created_at: adjustTimezone(trace.created_at), // Ajusta o horário
+        created_at: adjustTimezone(trace.created_at),
       }));
-
       setListTrace(adjustedData);
     } catch (error) {
       console.error('Erro:', error);
@@ -29,12 +71,27 @@ export default function Lista() {
   };
 
   const adjustTimezone = (createdAt) => {
-    // Cria um objeto Date a partir do createdAt
     const date = new Date(createdAt);
-    // Subtrai 3 horas em milissegundos (3 * 60 * 60 * 1000)
     date.setHours(date.getHours() - 3);
-    return date.toISOString(); // Retorna a data ajustada em formato ISO
+    return date.toISOString();
   };
+
+  const fetchTraceDetails = (traceId) => {
+    // Localiza o traçado com o ID correspondente em listTrace
+    const trace = listTrace.find(t => t.id === traceId);
+
+    if (trace) {
+      // Extrai os dados necessários
+      const { inner_trace, outer_trace, padding, curveIntensity, rotation } = trace; // Assumindo que `inner` e `outer` estão armazenados no objeto trace.
+      console.log(canvasRef)
+      // Chama a função de desenhar com os dados do traçado
+      drawFull(canvasRef, inner_trace, outer_trace, padding, curveIntensity, rotation);
+    } else {
+      console.error('Traçado não encontrado:', traceId);
+      // Aqui você pode adicionar um tratamento de erro, se necessário
+    }
+  };
+
 
   const deleteTrace = async (traceId) => {
     try {
@@ -43,41 +100,41 @@ export default function Lista() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: traceId }), // Enviando o ID no corpo da requisição
+        body: JSON.stringify({ id: traceId }),
       });
 
       if (!response.ok) {
-        // Lidar com diferentes códigos de erro
-        if (response.status === 404) {
-          const errorData = await response.json();
-          throw new Error(errorData.error); // Erro se o traço não for encontrado
-        }
         const errorData = await response.json();
-        throw new Error('Error deleting trace: ' + errorData.error); // Outros erros
+        throw new Error('Erro ao deletar traçado: ' + errorData.error);
       }
 
-      const data = await response.json(); // Obtendo dados de resposta
-      console.log(data.message); // Mensagem de sucesso
-
-      // Atualiza a lista local removendo o traçado excluído
+      const data = await response.json();
+      console.log(data.message);
       setListTrace((prevList) => prevList.filter((trace) => trace.id !== traceId));
-
-      return data; // Retornando dados, se necessário
+      setSelectedTrace(null);
+      setOuterTrace([]);
+      setInnerTrace([]);
     } catch (error) {
-      console.error('Error:', error.message); // Lidar com erros de rede ou outros
+      console.error('Erro:', error.message);
     }
   };
 
   const toggleDropdown = (traceId) => {
-    setDropdownOpen(dropdownOpen === traceId ? null : traceId); // Alterna entre abrir/fechar o dropdown
+    setDropdownOpen(dropdownOpen === traceId ? null : traceId);
+    if (dropdownOpen !== traceId) {
+    }
+  };
+
+  const viewTrace = (traceId) => {
+    fetchTraceDetails(traceId); // Visualiza o traçado no canvas
   };
 
   return (
-    <main className="bg-slate-700 min-h-screen">
-      <div className="container mx-auto p-4">
+    <main className="bg-slate-700 h-screen">
+      <div className="container mx-auto p-4 h-full">
         <h1 className="text-2xl font-bold text-white mb-5">Lista de Traçados</h1>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between h-full">
           <div className="w-1/2 pr-4">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
               <tbody>
@@ -100,9 +157,10 @@ export default function Lista() {
                     <td className="md:px-6 px-2 py-4">
                       <div className="relative">
                         <button
+                          ref={buttonRef}
                           onClick={() => toggleDropdown(trace.id)}
                           id="dropdownMenuIconButton"
-                          className="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+                          className="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 rounded-lg dark:text-white hover:text-white"
                           type="button"
                         >
                           <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 4 15">
@@ -111,6 +169,7 @@ export default function Lista() {
                         </button>
                         {dropdownOpen === trace.id && (
                           <div
+                            ref={dropdownRef}
                             id="dropdownDots"
                             className="absolute right-0 z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
                           >
@@ -127,6 +186,12 @@ export default function Lista() {
                                 >
                                   Excluir
                                 </button>
+                                <button
+                                  onClick={() => viewTrace(trace.id)} // Botão "Visualizar"
+                                  className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                >
+                                  Visualizar
+                                </button>
                               </div>
                             </ul>
                           </div>
@@ -138,15 +203,16 @@ export default function Lista() {
               </tbody>
             </table>
           </div>
-          <div className="w-1/2">
+          <div className="w-1/2 h-full">
             <canvas
               ref={canvasRef}
-              className="border border-black dark:bg-gray-900 h-96 w-full rounded"
+              className={`border border-black dark:bg-gray-900 h-3/4 w-full rounded 2xl:h-2/5`}
               id="tracado"
             />
           </div>
         </div>
       </div>
+
     </main>
   );
 }

@@ -5,7 +5,7 @@ import { drawTrace, drawFull } from './utils/canvasUtils';
 import { useRouter } from 'next/router';
 import { BASE_URL } from './utils/config';
 import { haversineDistance } from './utils/distance';
-import { distanceMin, pointsMin } from "pages/constants/distances";
+import { distanceMin, pointsMin, traceDistanceMin, bufferDistanceMin } from "pages/constants/distances";
 
 
 const MqttPage = () => {
@@ -141,7 +141,7 @@ const MqttPage = () => {
             const distanceFive = haversineDistance(lastPositionTrace.lat, lastPositionTrace.long, position.lat, position.long);
 
             // Se a distância for menor que 4 metros, a nova posição será adicionada
-            if (distanceFive > 0 && distanceFive < 50) {
+            if (distanceFive > bufferDistanceMin) {
 
               updatedTraces = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
               return updatedTraces; // Retorna a lista atualizada
@@ -175,7 +175,7 @@ const MqttPage = () => {
               const distance = haversineDistance(lastPosition.lat, lastPosition.long, avgPosition.lat, avgPosition.long);
 
               // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-              if (distance > 0) {
+              if (distance > traceDistanceMin) {
 
 
                 return [avgPosition, ...prevTrace]; // Adiciona a média ao início da lista de 'trace'
@@ -334,8 +334,8 @@ const MqttPage = () => {
         outer_trace: outerTrace,
         padding: padding, // novo campo de padding
         curveintensity: curveIntensity, // novo campo de curveintensity
+        rotation: rotation
       };
-      console.log(traceData)
 
       fetch(`${BASE_URL}/api/v1/savetrace`, {
         method: "POST",
