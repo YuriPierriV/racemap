@@ -11,7 +11,7 @@ export default function Lista() {
   const [padding, setPadding] = useState(50);
   const [curveIntensity, setCurveIntensity] = useState(0.2);
   const [rotation, setRotation] = useState(0);
-  
+
   const [isEditing, setIsEditing] = useState(false); // Controle do modo de edição
   const [formData, setFormData] = useState({}); // Dados do formulário
 
@@ -86,11 +86,11 @@ export default function Lista() {
     const trace = listTrace.find(t => t.id === traceId);
 
     if (trace) {
-      const { inner_trace, outer_trace, padding, curveIntensity, rotation } = trace;
+      const { inner_trace, outer_trace, padding, curveintensity, rotation } = trace;
       setInnerTrace(inner_trace);
       setOuterTrace(outer_trace);
       setPadding(padding);
-      setCurveIntensity(curveIntensity);
+      setCurveIntensity(curveintensity);
       setRotation(rotation);
     } else {
       console.error('Traçado não encontrado:', traceId);
@@ -142,7 +142,7 @@ export default function Lista() {
         inner_trace: trace.inner_trace,
         outer_trace: trace.outer_trace,
         padding: trace.padding,
-        curveintensity: trace.curveIntensity,
+        curveintensity: trace.curveintensity,
         rotation: trace.rotation,
       });
       setInnerTrace(trace.inner_trace);
@@ -157,7 +157,7 @@ export default function Lista() {
 
   const updateTrace = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Envia os novos dados para a API via PUT
       const response = await fetch(`${BASE_URL}/api/v1/edittrace`, {
@@ -180,25 +180,25 @@ export default function Lista() {
         const errorData = await response.json();
         throw new Error('Erro ao atualizar traçado: ' + errorData.error);
       }
-  
-      const updatedTrace = await response.json(); 
-  
+
+      const updatedTrace = await response.json();
+
       setListTrace((prevList) =>
         prevList.map((trace) =>
           trace.id === updatedTrace.id
             ? {
-                ...trace,
-                name: formData.name,
-                inner_trace: innerTrace,
-                outer_trace: outerTrace,
-                padding: padding,
-                curveintensity: curveIntensity,
-                rotation: rotation,
-              }
+              ...trace,
+              name: formData.name,
+              inner_trace: innerTrace,
+              outer_trace: outerTrace,
+              padding: padding,
+              curveintensity: curveIntensity,
+              rotation: rotation,
+            }
             : trace
         )
       );
-  
+
 
       setIsEditing(false);
       setFormData({});
@@ -235,7 +235,7 @@ export default function Lista() {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => viewTrace(trace.id)} 
+                          onClick={() => viewTrace(trace.id)}
                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
                           Visualizar
