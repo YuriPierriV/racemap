@@ -142,13 +142,13 @@ export default function Lista() {
         inner_trace: trace.inner_trace,
         outer_trace: trace.outer_trace,
         padding: trace.padding,
-        curveIntensity: trace.curveIntensity,
+        curveintensity: trace.curveIntensity,
         rotation: trace.rotation,
       });
       setInnerTrace(trace.inner_trace);
       setOuterTrace(trace.outer_trace);
       setPadding(trace.padding);
-      setCurveIntensity(trace.curveIntensity);
+      setCurveIntensity(trace.curveintensity);
       setRotation(trace.rotation);
       setIsEditing(true);
       setDropdownOpen(null);
@@ -171,7 +171,7 @@ export default function Lista() {
           inner_trace: innerTrace,  // Pega as variáveis atuais de inner/outerTrace
           outer_trace: outerTrace,
           padding: padding,
-          curveIntensity: curveIntensity,
+          curveintensity: curveIntensity,
           rotation: rotation,
         }),
       });
@@ -192,7 +192,7 @@ export default function Lista() {
                 inner_trace: innerTrace,
                 outer_trace: outerTrace,
                 padding: padding,
-                curveIntensity: curveIntensity,
+                curveintensity: curveIntensity,
                 rotation: rotation,
               }
             : trace

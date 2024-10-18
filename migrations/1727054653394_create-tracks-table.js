@@ -28,6 +28,10 @@ exports.up = (pgm) => {
       type: 'timestamp',
       default: pgm.func('current_timestamp'),
     },
+    updated_at: {
+      type: 'timestamp',
+      default: pgm.func('current_timestamp'),
+    },
     rotation: {
       type: 'integer',
       notNull: true,
