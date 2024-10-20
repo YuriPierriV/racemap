@@ -11,8 +11,8 @@ export default async function saveTrace(req, res) {
 
     try {
       const insertQuery = `
-        INSERT INTO tracks (name, inner_trace, outer_trace, padding, curveintensity, created_at, rotation)
-        VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+        INSERT INTO tracks (name, inner_trace, outer_trace, padding, curveintensity, created_at, updated_at, rotation)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6)
         RETURNING id;
       `;
 
