@@ -14,12 +14,17 @@ export default function EditForm({
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const updatedData = {
-      ...formData,
+      id: formData.traceId,
+      name: formData.name,
+      inner_trace: formData.inner_trace,
+      outer_trace: formData.outer_trace,
       padding,
       curveintensity: curveIntensity,
       rotation,
     };
+
     updateTrace(updatedData);
   };
 

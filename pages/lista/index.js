@@ -82,23 +82,37 @@ export default function Lista() {
     }
   };
 
-  const updateTrace = async (traceData) => {
+  const updateTrace = async (updatedData) => {
     try {
       const response = await fetch(`${BASE_URL}/api/v1/edittrace`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(traceData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
       });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error('Erro ao atualizar traçado: ' + errorData.error);
+      }
 
-      if (!response.ok) throw new Error('Erro ao atualizar traçado');
-
-      const updatedTrace = await response.json();
       setListTrace((prevList) =>
         prevList.map((trace) =>
-          trace.id === updatedTrace.id ? { ...trace, ...updatedTrace } : trace
+          trace.id === updatedData.id
+            ? { ...trace, ...updatedData }
+            : trace
         )
       );
-
+  
+      setInnerTrace(updatedData.inner_trace);
+      setOuterTrace(updatedData.outer_trace);
+      setPadding(updatedData.padding);
+      setCurveIntensity(updatedData.curveintensity);
+      setRotation(updatedData.rotation);
+  
+      drawFull(canvasRef, updatedData.inner_trace, updatedData.outer_trace, updatedData.padding, updatedData.curveintensity, updatedData.rotation);
+  
       setIsEditing(false);
       setFormData({});
     } catch (error) {

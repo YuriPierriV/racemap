@@ -4,7 +4,6 @@ export default async function editTrace(req, res) {
   if (req.method === 'PUT') {
     const { id, name, inner_trace, outer_trace, padding, curveintensity, rotation } = req.body;
 
-
     // Valida se os campos essenciais estão presentes
     if (!id || !name || !inner_trace || !outer_trace || padding === undefined || curveintensity === undefined || rotation === undefined) {
       return res.status(400).json({ error: 'Invalid trace data' });
