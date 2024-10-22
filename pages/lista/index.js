@@ -4,6 +4,7 @@ import TraceTable from 'pages/lista/TraceTable';
 import EditForm from 'pages/lista/EditForm';
 import CanvasDisplay from 'pages/lista/CanvasDisplay';
 import { drawFull } from 'pages/utils/canvasUtils';
+import { useRouter } from 'next/router'; // Para navegação em Next.js
 
 export default function Lista() {
   const [listTrace, setListTrace] = useState([]);
@@ -17,6 +18,8 @@ export default function Lista() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const canvasRef = useRef(null);
+
+  const router = useRouter(); // Inicializando o roteador para navegação
 
   useEffect(() => {
     fetchListTrace();
@@ -105,14 +108,6 @@ export default function Lista() {
         )
       );
   
-      setInnerTrace(updatedData.inner_trace);
-      setOuterTrace(updatedData.outer_trace);
-      setPadding(updatedData.padding);
-      setCurveIntensity(updatedData.curveintensity);
-      setRotation(updatedData.rotation);
-  
-      drawFull(canvasRef, updatedData.inner_trace, updatedData.outer_trace, updatedData.padding, updatedData.curveintensity, updatedData.rotation);
-  
       setIsEditing(false);
       setFormData({});
     } catch (error) {
@@ -120,10 +115,22 @@ export default function Lista() {
     }
   };
 
+  const goBack = () => {
+    router.push('/');
+  };
+
   return (
-    <main className="bg-slate-700 h-screen">
+    <main className="bg-slate-700 min-h-screen relative">
       <div className="container mx-auto p-4 h-full">
         <h1 className="text-2xl font-bold text-white mb-5">Lista de Traçados</h1>
+
+        <button
+          onClick={goBack}
+          className="px-6 py-2 bg-yellow-500 text-white rounded-lg font-bold transition-all duration-300 transform hover:scale-105 hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg absolute top-4 left-4 z-10"
+        >
+          Voltar
+        </button>
+
         <div className="flex justify-between h-full">
           {!isEditing ? (
             <TraceTable
@@ -149,6 +156,7 @@ export default function Lista() {
               setIsEditing={setIsEditing}
             />
           )}
+
           <CanvasDisplay canvasRef={canvasRef} />
         </div>
       </div>

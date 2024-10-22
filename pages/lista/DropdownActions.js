@@ -6,6 +6,7 @@ export default function DropdownActions({
   setDropdownOpen,
   startEdit,
   deleteTrace,
+  viewTrace // Adicionado
 }) {
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -14,7 +15,6 @@ export default function DropdownActions({
     setDropdownOpen(dropdownOpen === traceId ? null : traceId);
   };
 
-  // Fechar dropdown ao clicar fora
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -32,6 +32,12 @@ export default function DropdownActions({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [dropdownRef, buttonRef, setDropdownOpen]);
+
+  const handleEdit = (traceId) => {
+    viewTrace(traceId); // Carregar os dados do traçado selecionado
+    startEdit(traceId); // Iniciar o modo de edição
+    setDropdownOpen(null); // Fechar o dropdown
+  };
 
   return (
     <div className="relative inline-block text-left">
@@ -59,7 +65,7 @@ export default function DropdownActions({
         >
           <div className="py-1">
             <button
-              onClick={() => startEdit(traceId)}
+              onClick={() => handleEdit(traceId)} // Chama a nova função de edição
               className="block w-full px-4 py-2 text-sm text-gray-200 text-left hover:bg-gray-700 hover:text-white"
             >
               Editar

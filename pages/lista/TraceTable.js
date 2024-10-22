@@ -60,6 +60,7 @@ export default function TraceTable({
                   setDropdownOpen={setDropdownOpen}
                   startEdit={startEdit}
                   deleteTrace={deleteTrace}
+                  viewTrace={viewTrace}
                 />
               </td>
             </tr>
