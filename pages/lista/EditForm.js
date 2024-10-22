@@ -48,7 +48,7 @@ export default function EditForm({
           <input
             type="range"
             min="0"
-            max="100"
+            max="300"
             value={padding}
             onChange={(e) => setPadding(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -59,7 +59,7 @@ export default function EditForm({
           <input
             type="range"
             min="0"
-            max="1"
+            max="0.5"
             step="0.01"
             value={curveIntensity}
             onChange={(e) => setCurveIntensity(Number(e.target.value))}
