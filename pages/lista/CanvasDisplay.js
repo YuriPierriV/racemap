@@ -1,13 +1,30 @@
-import React from 'react';
+import React from "react";
+import { useEffect } from "react";
 
-export default function CanvasDisplay({ canvasRef }) {
+export default function CanvasDisplay({ canvasRef, width, height }) {
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = canvasRef.current.offsetWidth;
+        canvasRef.current.height = canvasRef.current.offsetHeight;
+      }
+    };
+
+    // Ajusta o width inicial
+    handleResize();
+
+    // Adiciona o listener para redimensionamento
+    window.addEventListener("resize", handleResize);
+
+    // Remove o listener ao desmontar o componente
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div className="w-1/2 h-full">
-      <canvas
-        ref={canvasRef}
-        className="border border-black dark:bg-gray-900 h-3/4 w-full rounded 2xl:h-2/5"
-        id="tracado"
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className={`border border-black dark:bg-gray-900  w-full rounded ${width} ${height}`}
+      id="tracado"
+    />
   );
 }
