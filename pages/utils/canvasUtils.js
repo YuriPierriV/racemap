@@ -144,10 +144,10 @@ export const drawFull = (
   drawCurvedPath(outer, "white");
 };
 
-export const drawTrace = (
+export const drawTrack = (
   canvasRef,
   status,
-  closeTrace = false,
+  closeTrack = false,
   outer,
   inner = [],
   ctxOuter = null,
@@ -170,18 +170,18 @@ export const drawTrace = (
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  let trace = [];
+  let track = [];
 
   //faz o desenho necessário
   if (status === "externo") {
-    trace = outer;
+    track = outer;
   } else if (status === "interno") {
-    trace = inner;
+    track = inner;
   } else {
     return;
   }
 
-  if (trace.length < 1) return;
+  if (track.length < 1) return;
 
   // Obtém os limites utilizando a função getBounds
   const bounds = getBounds(outer); // Usando a função getBounds para obter os limites
@@ -194,7 +194,7 @@ export const drawTrace = (
 
   // Desenha o traçado
   ctx.beginPath();
-  trace.forEach((pos, index) => {
+  track.forEach((pos, index) => {
     const x = (pos.long - bounds.longMin) * adjustedScaleX + padding;
     const y =
       canvas.height - ((pos.lat - bounds.latMin) * adjustedScaleY + padding);
@@ -207,11 +207,11 @@ export const drawTrace = (
   });
 
   // Se o traçado precisa ser fechado, conecta o último ponto ao primeiro
-  if (closeTrace) {
+  if (closeTrack) {
     ctx.lineTo(
-      (trace[0].long - bounds.longMin) * adjustedScaleX + padding,
+      (track[0].long - bounds.longMin) * adjustedScaleX + padding,
       canvas.height -
-        ((trace[0].lat - bounds.latMin) * adjustedScaleY + padding),
+        ((track[0].lat - bounds.latMin) * adjustedScaleY + padding),
     );
 
     ctx.strokeStyle = "white";
@@ -225,7 +225,7 @@ export const drawTrace = (
   ctx.stroke();
 
   // Desenha os pontos do traçado
-  trace.forEach((pos) => {
+  track.forEach((pos) => {
     const x = (pos.long - bounds.longMin) * adjustedScaleX + padding;
     const y =
       canvas.height - ((pos.lat - bounds.latMin) * adjustedScaleY + padding);

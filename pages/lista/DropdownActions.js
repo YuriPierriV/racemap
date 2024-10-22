@@ -1,18 +1,18 @@
 import React, { useRef, useEffect } from 'react';
 
 export default function DropdownActions({
-  traceId,
+  trackId, // Renomeado de traceId para trackId
   dropdownOpen,
   setDropdownOpen,
   startEdit,
-  deleteTrace,
-  viewTrace // Adicionado
+  deleteTrack, // Renomeado de deleteTrace para deleteTrack
+  viewTrack // Renomeado de viewTrace para viewTrack
 }) {
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const toggleDropdown = (traceId) => {
-    setDropdownOpen(dropdownOpen === traceId ? null : traceId);
+  const toggleDropdown = (trackId) => { // Renomeado
+    setDropdownOpen(dropdownOpen === trackId ? null : trackId);
   };
 
   useEffect(() => {
@@ -33,9 +33,9 @@ export default function DropdownActions({
     };
   }, [dropdownRef, buttonRef, setDropdownOpen]);
 
-  const handleEdit = (traceId) => {
-    viewTrace(traceId); // Carregar os dados do traçado selecionado
-    startEdit(traceId); // Iniciar o modo de edição
+  const handleEdit = (trackId) => { // Renomeado
+    viewTrack(trackId); // Carregar os dados do track selecionado
+    startEdit(trackId); // Iniciar o modo de edição
     setDropdownOpen(null); // Fechar o dropdown
   };
 
@@ -43,7 +43,7 @@ export default function DropdownActions({
     <div className="relative inline-block text-left">
       <button
         ref={buttonRef}
-        onClick={() => toggleDropdown(traceId)}
+        onClick={() => toggleDropdown(trackId)} // Renomeado
         className="inline-flex items-center p-2 text-sm font-medium text-gray-900 rounded-lg dark:text-white hover:text-white"
         type="button"
       >
@@ -58,20 +58,20 @@ export default function DropdownActions({
         </svg>
       </button>
 
-      {dropdownOpen === traceId && (
+      {dropdownOpen === trackId && ( // Renomeado
         <div
           ref={dropdownRef}
           className="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
         >
           <div className="py-1">
             <button
-              onClick={() => handleEdit(traceId)} // Chama a nova função de edição
+              onClick={() => handleEdit(trackId)} // Chama a nova função de edição
               className="block w-full px-4 py-2 text-sm text-gray-200 text-left hover:bg-gray-700 hover:text-white"
             >
               Editar
             </button>
             <button
-              onClick={() => deleteTrace(traceId)}
+              onClick={() => deleteTrack(trackId)} // Renomeado de deleteTrace para deleteTrack
               className="block w-full px-4 py-2 text-sm text-gray-200 text-left hover:bg-gray-700 hover:text-white"
             >
               Excluir

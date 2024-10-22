@@ -1,25 +1,26 @@
 import mqtt from "mqtt";
 import React, { useEffect, useState, useRef } from "react";
 import { connectUrl, options } from "infra/mqttConfig.js";
-import { drawTrace, drawFull } from "./utils/canvasUtils";
+import { drawTrack, drawFull } from "./utils/canvasUtils";
 import { useRouter } from "next/router";
 import { BASE_URL } from "./utils/config";
 import { haversineDistance } from "./utils/distance";
 import {
   distanceMin,
   pointsMin,
-  traceDistanceMin,
+  trackDistanceMin,
   bufferDistanceMin,
 } from "pages/constants/distances";
 import ModalRace from "./race/ModalRace";
+import CanvasDisplay from "./lista/CanvasDisplay";
 
 const MqttPage = () => {
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
   const [buffer, setBuffer] = useState([]); //lista das ultimas "5" ultimas posições na hora de criar um traçado, buffer para media
-  const [trace, setTrace] = useState([]); //lista de posições quando criar traçado
+  const [track, setTrack] = useState([]); //lista de posições quando criar traçado
 
-  const [outerTrace, setOuterTrace] = useState([]); //lista de posições quando criar traçado 1
-  const [innerTrace, setInnerTrace] = useState([]); //lista de posições quando criar traçado 2
+  const [outerTrack, setOuterTrack] = useState([]); //lista de posições quando criar traçado 1
+  const [innerTrack, setInnerTrack] = useState([]); //lista de posições quando criar traçado 2
   const [connection, setConnection] = useState(false); //vizualização da conexão com o mqtt
   const [client, setClient] = useState(null); // conexão em si do mqtt
 
@@ -73,13 +74,13 @@ const MqttPage = () => {
       return () => {
         console.log("passou");
         mqttClient.end();
-        cancelTrace();
+        cancelTrack();
       };
     });
 
     return () => {
       mqttClient.end();
-      cancelTrace();
+      cancelTrack();
     };
   }, []);
 
@@ -102,8 +103,8 @@ const MqttPage = () => {
     if (status === "ajustes") {
       drawFull(
         canvasRef,
-        innerTrace,
-        outerTrace,
+        innerTrack,
+        outerTrack,
         padding,
         curveIntensity,
         rotation,
@@ -111,14 +112,14 @@ const MqttPage = () => {
     }
   }, [padding, curveIntensity, rotation, status]);
 
-  // Cria as listas de buffer e trace
+  // Cria as listas de buffer e Track
   useEffect(() => {
     if (mode === 10) {
       if (status === "ajustes") {
         drawFull(
           canvasRef,
-          innerTrace,
-          outerTrace,
+          innerTrack,
+          outerTrack,
           padding,
           curveIntensity,
           rotation,
@@ -129,10 +130,11 @@ const MqttPage = () => {
       const position = { lat: messages[0].lat, long: messages[0].long };
 
       setBuffer((prevBuffer) => {
-        let updatedTraces; // Variável que vai armazenar as novas posições atualizadas
+        let updatedTracks; // Variável que vai armazenar as novas posições atualizadas
 
         // Verifica se a lista de traçados anteriores (prevBuffer) tem menos que 5 posições
         if (prevBuffer.length < 5) {
+          
           // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
           if (prevBuffer.length == 0) {
             return [position];
@@ -140,21 +142,23 @@ const MqttPage = () => {
 
           // Se a lista de traçados anteriores tiver algum item
 
-          if (trace.length > 0) {
-            const lastPositionTrace = trace[0]; // Pega a última posição registrada em 'trace'
+          if (track.length > 0) {
+            
+            const lastPositionTrack = track[0]; // Pega a última posição registrada em 'Track'
 
-            // Calcula a distância entre a última posição de 'trace' e a nova posição 'position'
+            // Calcula a distância entre a última posição de 'Track' e a nova posição 'position'
             const distanceFive = haversineDistance(
-              lastPositionTrace.lat,
-              lastPositionTrace.long,
+              lastPositionTrack.lat,
+              lastPositionTrack.long,
               position.lat,
               position.long,
             );
+            
 
             // Se a distância for menor que 4 metros, a nova posição será adicionada
             if (distanceFive > bufferDistanceMin) {
-              updatedTraces = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
-              return updatedTraces; // Retorna a lista atualizada
+              updatedTracks = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
+              return updatedTracks; // Retorna a lista atualizada
             }
 
             // Se a distância for maior que 4 metros, retorna a lista anterior sem alterações
@@ -162,21 +166,23 @@ const MqttPage = () => {
             return prevBuffer;
           } else {
             // Caso a lista nao tenha posições, adiciona a nova posição diretamente
-            updatedTraces = [position, ...prevBuffer];
+            updatedTracks = [position, ...prevBuffer];
 
-            return updatedTraces; // Retorna a lista atualizada
+            return updatedTracks; // Retorna a lista atualizada
           }
         } else {
           // Caso a lista de traçados anteriores já tenha 5 posições, adiciona a nova posição
-          updatedTraces = [position, ...prevBuffer]; // Mantém apenas as 5 posições mais recentes
+          updatedTracks = [position, ...prevBuffer]; // Mantém apenas as 5 posições mais recentes
           // Calcula a média das latitudes e longitudes das 5 últimas posições
 
-          const avgPosition = avgPlace(updatedTraces);
+          const avgPosition = avgPlace(updatedTracks);
 
-          // Atualiza a lista 'trace' com base na distância entre a última posição e a média calculada
-          setTrace((prevTrace) => {
-            if (prevTrace.length > 0) {
-              const lastPosition = prevTrace[0]; // Pega a última posição registrada em 'trace'
+          // Atualiza a lista 'Track' com base na distância entre a última posição e a média calculada
+          setTrack((prevTrack) => {
+            
+            if (prevTrack.length > 0) {
+              
+              const lastPosition = prevTrack[0]; // Pega a última posição registrada em 'Track'
 
               // Calcula a distância entre a última posição e a média das 5 últimas posições
               const distance = haversineDistance(
@@ -187,13 +193,13 @@ const MqttPage = () => {
               );
 
               // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-              if (distance > traceDistanceMin) {
-                return [avgPosition, ...prevTrace]; // Adiciona a média ao início da lista de 'trace'
+              if (distance > trackDistanceMin) {
+                return [avgPosition, ...prevTrack]; // Adiciona a média ao início da lista de 'Track'
               }
 
-              return prevTrace;
+              return prevTrack;
             } else {
-              // Se 'trace' estiver vazio, adiciona a nova posição média como o primeiro item
+              // Se 'Track' estiver vazio, adiciona a nova posição média como o primeiro item
               return [avgPosition];
             }
           });
@@ -205,10 +211,11 @@ const MqttPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (trace.length <= 3) return;
+    if (track.length <= 3) return;
 
-    const tracado = trace.slice(0, trace.length - 3);
+    const tracado = track.slice(0, track.length - 3);
     setMinPoints(tracado.length);
+    console.log(tracado)
     if (tracado.length >= pointsMin) {
       const length = tracado.length - 1;
       const distance = haversineDistance(
@@ -220,34 +227,34 @@ const MqttPage = () => {
       setDistance(distance);
       if (distance < distanceMin) {
         if (status === "interno") {
-          drawTrace(
+          drawTrack(
             canvasRef,
             status,
             true,
-            outerTrace,
+            outerTrack,
             tracado,
             ctxOuter,
             padding,
           );
           sendMode(0);
           setStatus("ajustes");
-          setInnerTrace(tracado);
-          setTrace([]);
+          setInnerTrack(tracado);
+          setTrack([]);
           setBuffer([]);
           return;
         }
         if (status === "externo") {
           setStatus("pre-interno");
           sendMode("0");
-          setOuterTrace(tracado);
-          setTrace([]);
+          setOuterTrack(tracado);
+          setTrack([]);
           setBuffer([]);
-          drawTrace(
+          drawTrack(
             canvasRef,
             status,
             true,
             tracado,
-            innerTrace,
+            innerTrack,
             ctxOuter,
             padding,
           );
@@ -260,22 +267,22 @@ const MqttPage = () => {
     }
 
     if (status === "interno") {
-      const ctx = drawTrace(
+      const ctx = drawTrack(
         canvasRef,
         status,
         false,
-        outerTrace,
+        outerTrack,
         tracado,
         ctxOuter,
         padding,
       );
       if (ctx === "get ctx") {
-        drawTrace(
+        drawTrack(
           canvasRef,
           status,
           true,
           tracado,
-          innerTrace,
+          innerTrack,
           ctxOuter,
           padding,
         );
@@ -285,17 +292,17 @@ const MqttPage = () => {
       }
     }
     if (status === "externo") {
-      drawTrace(
+      drawTrack(
         canvasRef,
         status,
         false,
         tracado,
-        innerTrace,
+        innerTrack,
         ctxOuter,
         padding,
       );
     }
-  }, [trace]); // Dependências que devem acionar a atualização
+  }, [track]); // Dependências que devem acionar a atualização
 
   const sendMode = (newMode) => {
     if (client) {
@@ -310,15 +317,15 @@ const MqttPage = () => {
     }
   };
 
-  const startTrace = () => {
+  const startTrack = () => {
     setStatus("iniciando");
     sendMode(10);
   };
 
   const avgPlace = (lista) => {
     // Calcula a média das latitudes e longitudes das 5 últimas posições
-    const totalLat = lista.reduce((acc, trace) => acc + trace.lat, 0); // Soma todas as latitudes
-    const totalLng = lista.reduce((acc, trace) => acc + trace.long, 0); // Soma todas as longitudes
+    const totalLat = lista.reduce((acc, track) => acc + track.lat, 0); // Soma todas as latitudes
+    const totalLng = lista.reduce((acc, track) => acc + track.long, 0); // Soma todas as longitudes
 
     const avgLat = totalLat / lista.length; // Calcula a média da latitude
     const avgLng = totalLng / lista.length; // Calcula a média da longitude
@@ -345,54 +352,54 @@ const MqttPage = () => {
     sendMode(10);
   };
 
-  const saveTrace = () => {
+  const saveTrack = () => {
     if (client) {
       sendMode(0);
-
-      // Certifique-se de que 'trace' inclua os valores de 'padding' e 'curveintensity'
-      const traceData = {
+  
+      // Certifique-se de que 'trackData' inclua os valores de 'padding' e 'curveintensity'
+      const trackData = {
         name: trackName, // ou algum outro valor relevante para 'name'
-        inner_trace: innerTrace,
-        outer_trace: outerTrace,
-        padding: padding, // novo campo de padding
-        curveintensity: curveIntensity, // novo campo de curveintensity
+        inner_track: innerTrack,
+        outer_track: outerTrack,
+        padding: padding, // campo de padding
+        curveintensity: curveIntensity, // campo de curveintensity
         rotation: rotation,
       };
-
-      fetch(`${BASE_URL}/api/v1/savetrace`, {
+  
+      fetch(`${BASE_URL}/api/v1/tracks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(traceData),
+        body: JSON.stringify(trackData),
       })
         .then((response) => {
           if (!response.ok) {
-            throw new Error("Failed to save trace");
+            throw new Error("Failed to save track");
           }
-
+  
           return response.json();
         })
         .then((data) => {
-          console.log("Trace saved successfully:", data);
-          goToLista();
+          console.log("Track saved successfully:", data);
+          goToLista(); // Navega para a lista de tracks após salvar
         })
         .catch((error) => {
-          console.error("Error saving trace:", error);
+          console.error("Error saving track:", error);
         });
     }
   };
 
-  const cancelTrace = () => {
-    setTrace((prevTrace) => {
+  const cancelTrack = () => {
+    setTrack((prevTrack) => {
       return [];
     });
     setBuffer((prevBuffer) => {
       return [];
     });
     setTrackName("");
-    setInnerTrace([]);
-    setOuterTrace([]);
+    setInnerTrack([]);
+    setOuterTrack([]);
     setPadding(50);
     setCurveIntensity(0.2);
     cleanMetrics();
@@ -401,7 +408,7 @@ const MqttPage = () => {
     latMax.current = -Infinity;
     longMin.current = Infinity;
     longMax.current = -Infinity;
-    drawTrace(canvasRef, "externo", false, []);
+    drawTrack(canvasRef, "externo", false, []);
     setStatus("aguardando");
   };
 
@@ -412,7 +419,7 @@ const MqttPage = () => {
     router.push("/lista");
   };
 
-  const goToStartRace = async () => {
+  const goToStarTrack = async () => {
     // Se o cliente MQTT estiver conectado, desconecte antes de navegar
 
     // Agora pode fazer o push para /lista
@@ -552,7 +559,7 @@ const MqttPage = () => {
                               <button
                                 type="button"
                                 className="text-sm font-semibold leading-6 text-gray-400"
-                                onClick={cancelTrace}
+                                onClick={cancelTrack}
                               >
                                 Cancelar
                               </button>
@@ -620,7 +627,7 @@ const MqttPage = () => {
                             <button
                               type="button"
                               className="text-sm font-semibold leading-6 text-gray-400"
-                              onClick={() => cancelTrace()}
+                              onClick={() => cancelTrack()}
                             >
                               Cancelar
                             </button>
@@ -663,7 +670,7 @@ const MqttPage = () => {
                               <button
                                 type="button"
                                 className="text-sm font-semibold leading-6 text-gray-400"
-                                onClick={cancelTrace}
+                                onClick={cancelTrack}
                               >
                                 Cancelar
                               </button>
@@ -731,7 +738,7 @@ const MqttPage = () => {
                             <button
                               type="button"
                               className="text-sm font-semibold leading-6 text-gray-400"
-                              onClick={() => cancelTrace()}
+                              onClick={() => cancelTrack()}
                             >
                               Cancelar
                             </button>
@@ -806,12 +813,12 @@ const MqttPage = () => {
                       <button
                         type="button"
                         className="text-sm font-semibold leading-6 text-gray-400"
-                        onClick={() => cancelTrace()}
+                        onClick={() => cancelTrack()}
                       >
                         Cancelar
                       </button>
                       <button
-                        onClick={saveTrace}
+                        onClick={saveTrack}
                         disabled={!connection || mode === 10 || mode === 10}
                         className="px-6 py-2 bg-blue-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                       >
@@ -882,7 +889,7 @@ const MqttPage = () => {
                   On
                 </button>
                 <button
-                  onClick={startTrace}
+                  onClick={startTrack}
                   disabled={!connection || mode === 10 || mode === 10}
                   className="px-6 py-2 bg-blue-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
@@ -900,11 +907,11 @@ const MqttPage = () => {
             </>
           )}
 
-          <canvas
-            ref={canvasRef}
-            className={`border border-black dark:bg-gray-900 h-3/4 w-full rounded 2xl:h-2/5`}
-            id="tracado"
-          />
+            <CanvasDisplay
+              canvasRef={canvasRef}
+              width={"w-full"}
+              height={"2xl:h-2/5 h-3/4"}
+            />
         </div>
       </div>
     </main>

@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BASE_URL } from 'pages/utils/config';
-import TraceTable from 'pages/lista/TraceTable';
-import EditForm from 'pages/lista/EditForm';
+import TrackTable from 'pages/lista/TrackTable'; // Renomeado
+import EditForm from 'pages/lista/EditForm'; // Preservado, se necessário
 import CanvasDisplay from 'pages/lista/CanvasDisplay';
 import { drawFull } from 'pages/utils/canvasUtils';
 import { useRouter } from 'next/router'; // Para navegação em Next.js
 
 export default function Lista() {
-  const [listTrace, setListTrace] = useState([]);
+  const [listTrack, setListTrack] = useState([]); // Renomeado
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const [selectedTrace, setSelectedTrace] = useState(null);
-  const [outerTrace, setOuterTrace] = useState([]);
-  const [innerTrace, setInnerTrace] = useState([]);
+  const [selectedTrack, setSelectedTrack] = useState(null); // Renomeado
+  const [outerTrack, setOuterTrack] = useState([]); // Renomeado
+  const [innerTrack, setInnerTrack] = useState([]); // Renomeado
   const [padding, setPadding] = useState(50);
   const [curveIntensity, setCurveIntensity] = useState(0.2);
   const [rotation, setRotation] = useState(0);
@@ -22,24 +22,24 @@ export default function Lista() {
   const router = useRouter(); // Inicializando o roteador para navegação
 
   useEffect(() => {
-    fetchListTrace();
+    fetchListTrack(); // Renomeado
   }, []);
 
   useEffect(() => {
-    if (innerTrace.length > 0 && outerTrace.length > 0) {
-      drawFull(canvasRef, innerTrace, outerTrace, padding, curveIntensity, rotation);
+    if (innerTrack.length > 0 && outerTrack.length > 0) {
+      drawFull(canvasRef, innerTrack, outerTrack, padding, curveIntensity, rotation);
     }
-  }, [padding, curveIntensity, rotation, innerTrace, outerTrace]);
+  }, [padding, curveIntensity, rotation, innerTrack, outerTrack]);
 
-  const fetchListTrace = async () => {
+  const fetchListTrack = async () => { // Renomeado
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/getsavedtraces`);
+      const response = await fetch(`${BASE_URL}/api/v1/tracks`); // URL atualizada
       const data = await response.json();
-      const adjustedData = data.map(trace => ({
-        ...trace,
-        created_at: adjustTimezone(trace.created_at),
+      const adjustedData = data.map(track => ({ // Renomeado
+        ...track,
+        created_at: adjustTimezone(track.created_at),
       }));
-      setListTrace(adjustedData);
+      setListTrack(adjustedData); // Renomeado
     } catch (error) {
       console.error('Erro:', error);
     }
@@ -51,43 +51,43 @@ export default function Lista() {
     return date.toISOString();
   };
 
-  const fetchTraceDetails = (traceId) => {
-    const trace = listTrace.find(t => t.id === traceId);
+  const fetchTrackDetails = (trackId) => { // Renomeado
+    const track = listTrack.find(t => t.id === trackId); // Renomeado
 
-    if (trace) {
-      const { inner_trace, outer_trace, padding, curveintensity, rotation } = trace;
-      setInnerTrace(inner_trace);
-      setOuterTrace(outer_trace);
+    if (track) {
+      const { inner_track, outer_track, padding, curveintensity, rotation } = track; // Renomeado
+      setInnerTrack(inner_track);
+      setOuterTrack(outer_track);
       setPadding(padding);
       setCurveIntensity(curveintensity);
       setRotation(rotation);
     } else {
-      console.error('Traçado não encontrado:', traceId);
+      console.error('Track não encontrado:', trackId); // Renomeado
     }
   };
 
-  const deleteTrace = async (traceId) => {
+  const deleteTrack = async (trackId) => { // Renomeado
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/deletetrace`, {
+      const response = await fetch(`${BASE_URL}/api/v1/tracks/${trackId}`, { // URL atualizada
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: traceId }),
+        body: JSON.stringify({ id: trackId }),
       });
 
-      if (!response.ok) throw new Error('Erro ao deletar traçado');
+      if (!response.ok) throw new Error('Erro ao deletar track'); // Renomeado
 
-      setListTrace((prevList) => prevList.filter((trace) => trace.id !== traceId));
-      setSelectedTrace(null);
-      setOuterTrace([]);
-      setInnerTrace([]);
+      setListTrack((prevList) => prevList.filter((track) => track.id !== trackId)); // Renomeado
+      setSelectedTrack(null); // Renomeado
+      setOuterTrack([]);
+      setInnerTrack([]);
     } catch (error) {
       console.error('Erro:', error.message);
     }
   };
 
-  const updateTrace = async (updatedData) => {
+  const updateTrack = async (updatedData) => { // Renomeado
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/edittrace`, {
+      const response = await fetch(`${BASE_URL}/api/v1/tracks/${updatedData.id}`, { // URL atualizada
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -97,14 +97,14 @@ export default function Lista() {
   
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error('Erro ao atualizar traçado: ' + errorData.error);
+        throw new Error('Erro ao atualizar track: ' + errorData.error); // Renomeado
       }
 
-      setListTrace((prevList) =>
-        prevList.map((trace) =>
-          trace.id === updatedData.id
-            ? { ...trace, ...updatedData }
-            : trace
+      setListTrack((prevList) =>
+        prevList.map((track) => // Renomeado
+          track.id === updatedData.id
+            ? { ...track, ...updatedData }
+            : track
         )
       );
   
@@ -121,8 +121,8 @@ export default function Lista() {
 
   return (
     <main className="bg-slate-700 min-h-screen relative">
-      <div className="container mx-auto p-4 h-full">
-        <h1 className="text-2xl font-bold text-white mb-5">Lista de Traçados</h1>
+      <div className="container mx-auto p-4 min-h-full">
+        <h1 className="text-2xl font-bold text-white mb-5">Lista de Tracks</h1> {/* Renomeado */}
 
         <button
           onClick={goBack}
@@ -131,33 +131,40 @@ export default function Lista() {
           Voltar
         </button>
 
-        <div className="flex justify-between h-full">
-          {!isEditing ? (
-            <TraceTable
-              listTrace={listTrace}
-              setDropdownOpen={setDropdownOpen}
-              dropdownOpen={dropdownOpen}
-              viewTrace={fetchTraceDetails}
-              deleteTrace={deleteTrace}
-              setIsEditing={setIsEditing}
-              setFormData={setFormData}
-            />
-          ) : (
-            <EditForm
-              formData={formData}
-              setFormData={setFormData}
-              padding={padding}
-              setPadding={setPadding}
-              curveIntensity={curveIntensity}
-              setCurveIntensity={setCurveIntensity}
-              rotation={rotation}
-              setRotation={setRotation}
-              updateTrace={updateTrace}
-              setIsEditing={setIsEditing}
-            />
-          )}
+        <div className="flex justify-center min-h-full w-full">
+          <div className="w-1/2 p-4">
+            {!isEditing ? (
+              <TrackTable // Renomeado
+                listTrack={listTrack} // Renomeado
+                setDropdownOpen={setDropdownOpen}
+                dropdownOpen={dropdownOpen}
+                viewTrack={fetchTrackDetails} // Renomeado
+                deleteTrack={deleteTrack} // Renomeado
+                setIsEditing={setIsEditing}
+                setFormData={setFormData}
+              />
+            ) : (
+              <EditForm
+                formData={formData}
+                setFormData={setFormData}
+                padding={padding}
+                setPadding={setPadding}
+                curveIntensity={curveIntensity}
+                setCurveIntensity={setCurveIntensity}
+                rotation={rotation}
+                setRotation={setRotation}
+                updateTrack={updateTrack} // Renomeado
+                setIsEditing={setIsEditing}
+              />
+            )}
+          </div>
 
-          <CanvasDisplay canvasRef={canvasRef} />
+          <div className="w-1/2 flex items-center justify-center">
+            <CanvasDisplay canvasRef={canvasRef}
+              width={"w-full"}
+              height={"h-[75vh] 2xl:h-[40vh]"}>
+            </CanvasDisplay>
+          </div>
         </div>
       </div>
     </main>

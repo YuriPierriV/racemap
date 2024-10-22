@@ -23,7 +23,7 @@ export default function CanvasDisplay({ canvasRef, width, height }) {
   return (
     <canvas
       ref={canvasRef}
-      className={`border border-black dark:bg-gray-900  w-full rounded ${width} ${height}`}
+      className={`border border-black dark:bg-gray-900 rounded ${width} ${height}`}
       id="tracado"
     />
   );

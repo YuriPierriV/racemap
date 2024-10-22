@@ -1,26 +1,26 @@
 import React from 'react';
 import DropdownActions from 'pages/lista/DropdownActions';
 
-export default function TraceTable({
-  listTrace,
+export default function TrackTable({
+  listTrack,
   setDropdownOpen,
   dropdownOpen,
-  viewTrace,
-  deleteTrace,
+  viewTrack, // Renomeado
+  deleteTrack, // Renomeado
   setIsEditing,
   setFormData,
 }) {
-  const startEdit = (traceId) => {
-    const trace = listTrace.find(t => t.id === traceId);
-    if (trace) {
+  const startEdit = (trackId) => { // Renomeado
+    const track = listTrack.find(t => t.id === trackId); // Renomeado
+    if (track) {
       setFormData({
-        traceId: trace.id,
-        name: trace.name,
-        inner_trace: trace.inner_trace,
-        outer_trace: trace.outer_trace,
-        padding: trace.padding,
-        curveintensity: trace.curveintensity,
-        rotation: trace.rotation,
+        trackId: track.id, // Renomeado
+        name: track.name,
+        inner_track: track.inner_track,
+        outer_track: track.outer_track,
+        padding: track.padding,
+        curveintensity: track.curveintensity,
+        rotation: track.rotation,
       });
       setIsEditing(true);
       setDropdownOpen(null);
@@ -28,14 +28,14 @@ export default function TraceTable({
   };
 
   return (
-    <div className="w-1/2 pr-4">
+    <div className="w-full pr-4">
       <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 border-separate border-spacing-y-2">
         <tbody>
-          {listTrace.map((trace) => (
-            <tr className="bg-slate-800 rounded-lg shadow-md" key={trace.id}>
-              <td className="px-6 py-4 font-medium text-white">{trace.name}</td>
+          {listTrack.map((track) => ( // Renomeado
+            <tr className="bg-slate-800 rounded-lg shadow-md" key={track.id}>
+              <td className="px-6 py-4 font-medium text-white">{track.name}</td>
               <td className="px-6 py-4 text-gray-400">
-                {new Date(trace.created_at).toLocaleString('pt-BR', {
+                {new Date(track.created_at).toLocaleString('pt-BR', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -47,7 +47,7 @@ export default function TraceTable({
               </td>
               <td className="px-6 py-4">
                 <button
-                  onClick={() => viewTrace(trace.id)}
+                  onClick={() => viewTrack(track.id)} // Renomeado
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                 >
                   Visualizar
@@ -55,12 +55,12 @@ export default function TraceTable({
               </td>
               <td className="px-6 py-4">
                 <DropdownActions
-                  traceId={trace.id}
+                  trackId={track.id} // Renomeado
                   dropdownOpen={dropdownOpen}
                   setDropdownOpen={setDropdownOpen}
                   startEdit={startEdit}
-                  deleteTrace={deleteTrace}
-                  viewTrace={viewTrace}
+                  deleteTrack={deleteTrack} // Renomeado
+                  viewTrack={viewTrack} // Renomeado
                 />
               </td>
             </tr>

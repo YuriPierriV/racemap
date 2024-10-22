@@ -9,29 +9,29 @@ export default function EditForm({
   setCurveIntensity,
   rotation,
   setRotation,
-  updateTrace,
+  updateTrack, // Atualizado para updateTrack
   setIsEditing,
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const updatedData = {
-      id: formData.traceId,
+      id: formData.trackId, // Renomeado para trackId
       name: formData.name,
-      inner_trace: formData.inner_trace,
-      outer_trace: formData.outer_trace,
+      inner_track: formData.inner_track,
+      outer_track: formData.outer_track,
       padding,
       curveintensity: curveIntensity,
       rotation,
     };
 
-    updateTrace(updatedData);
+    updateTrack(updatedData); // Atualizado para updateTrack
   };
 
   return (
-    <div className="w-1/2 pr-4">
+    <div className="w-full pr-4">
       <form className="bg-slate-800 p-4 rounded shadow-md" onSubmit={handleSubmit}>
-        <h2 className="text-xl font-bold text-white mb-2">Editar Traçado</h2>
+        <h2 className="text-xl font-bold text-white mb-2">Editar Track</h2> {/* Renomeado */}
         <div className="mb-4">
           <label className="block text-gray-300">Nome:</label>
           <input

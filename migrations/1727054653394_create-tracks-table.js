@@ -8,11 +8,11 @@ exports.up = (pgm) => {
       type: 'varchar(100)',
       notNull: true,
     },
-    inner_trace: {
+    inner_track: {
       type: 'jsonb',
       notNull: true,
     },
-    outer_trace: {
+    outer_track: {
       type: 'jsonb',
       notNull: true,
     },
