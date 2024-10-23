@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { drawFull } from "pages/utils/canvasUtils";
 
-export default function CanvasDisplay({ canvasRef, track, width, height }) {
+export default function CanvasDisplay({ track, width, height }) {
+  const canvasRef = React.createRef(); // Adiciona a referência de canvasRef
+
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current && track) {

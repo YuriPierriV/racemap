@@ -20,13 +20,12 @@ function ModalRace() {
 
   const fetchListTrace = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/getsavedtraces`);
+      const response = await fetch(`${BASE_URL}/api/v1/tracks`);
       const data = await response.json();
 
       const adjustedData = data.map((trace) => ({
         ...trace,
         created_at: adjustTimezone(trace.created_at),
-        canvasRef: React.createRef(), // Adiciona a referência de canvasRef
       }));
 
       setListTrace(adjustedData);
