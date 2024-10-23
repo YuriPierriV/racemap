@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export default function EditForm({
   formData,
@@ -30,32 +30,43 @@ export default function EditForm({
 
   return (
     <div className="w-full pr-4">
-      <form className="bg-slate-800 p-4 rounded shadow-md" onSubmit={handleSubmit}>
-        <h2 className="text-xl font-bold text-white mb-2">Editar Track</h2> {/* Renomeado */}
+      <form
+        className="bg-slate-800 p-4 rounded shadow-md"
+        onSubmit={handleSubmit}
+      >
+        <h2 className="text-xl font-bold text-white mb-2">Editar Track</h2>{" "}
+        {/* Renomeado */}
         <div className="mb-4">
           <label className="block text-gray-300">Nome:</label>
           <input
             type="text"
             name="name"
-            value={formData.name || ''}
+            value={formData.name || ""}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="border border-gray-600 rounded w-full p-2 bg-slate-900 text-white"
             required
           />
         </div>
         <div className="flex flex-col space-y-4">
-          <label className="text-sm font-medium text-gray-300">Ajustar Padding</label>
+          <label className="text-sm font-medium text-gray-300">
+            Ajustar Padding
+          </label>
           <input
             type="range"
             min="0"
-            max="300"
+            max="0.40"
+            step="0.005"
             value={padding}
             onChange={(e) => setPadding(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           />
-          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">Valor atual: {padding}</span>
+          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+            Valor atual: {padding}
+          </span>
 
-          <label className="text-sm font-medium text-gray-300">Ajustar Intensidade da Curva</label>
+          <label className="text-sm font-medium text-gray-300">
+            Ajustar Intensidade da Curva
+          </label>
           <input
             type="range"
             min="0"
@@ -65,9 +76,13 @@ export default function EditForm({
             onChange={(e) => setCurveIntensity(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           />
-          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">Valor atual: {curveIntensity}</span>
+          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+            Valor atual: {curveIntensity}
+          </span>
 
-          <label className="text-sm font-medium text-gray-300">Ajustar Rotação</label>
+          <label className="text-sm font-medium text-gray-300">
+            Ajustar Rotação
+          </label>
           <input
             type="range"
             min="0"
@@ -77,7 +92,9 @@ export default function EditForm({
             onChange={(e) => setRotation(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           />
-          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">Valor atual: {rotation}</span>
+          <span className="text-sm font-medium text-blue-700 dark:text-gray-300">
+            Valor atual: {rotation}
+          </span>
         </div>
         <button
           type="submit"

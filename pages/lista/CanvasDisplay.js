@@ -1,16 +1,27 @@
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import { drawFull } from "pages/utils/canvasUtils";
 
-export default function CanvasDisplay({ canvasRef, width, height }) {
+export default function CanvasDisplay({ canvasRef, track, width, height }) {
   useEffect(() => {
     const handleResize = () => {
-      if (canvasRef.current) {
+      if (canvasRef.current && track) {
+        // Ajusta as dimensões do canvas
         canvasRef.current.width = canvasRef.current.offsetWidth;
         canvasRef.current.height = canvasRef.current.offsetHeight;
+
+        // Redesena o conteúdo do canvas após o resize
+        drawFull(
+          canvasRef,
+          track.inner_track,
+          track.outer_track,
+          track.padding,
+          track.curveIntensity,
+          track.rotation,
+        );
       }
     };
 
-    // Ajusta o width inicial
+    // Ajusta o width inicial e redesenha
     handleResize();
 
     // Adiciona o listener para redimensionamento
@@ -18,7 +29,20 @@ export default function CanvasDisplay({ canvasRef, width, height }) {
 
     // Remove o listener ao desmontar o componente
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [track]);
+
+  useEffect(() => {
+    if (track) {
+      drawFull(
+        canvasRef,
+        track.inner_track,
+        track.outer_track,
+        track.padding,
+        track.curveIntensity,
+        track.rotation,
+      );
+    }
+  }, [track]);
 
   return (
     <canvas

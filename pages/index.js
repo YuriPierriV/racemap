@@ -37,7 +37,7 @@ const MqttPage = () => {
   const [distance, setDistance] = useState(102);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const [padding, setPadding] = useState(50); // 3
+  const [padding, setPadding] = useState(0.1); // 3
   const [curveIntensity, setCurveIntensity] = useState(0.2); // 4
   const [rotation, setRotation] = useState(0);
 
@@ -69,10 +69,8 @@ const MqttPage = () => {
     });
 
     mqttClient.on("close", () => {
-      console.log("Connection closed");
       setConnection(false);
       return () => {
-        console.log("passou");
         mqttClient.end();
         cancelTrack();
       };
@@ -100,6 +98,25 @@ const MqttPage = () => {
   }, [client]);
 
   useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current && track) {
+        // Ajusta as dimensões do canvas
+        canvasRef.current.width = canvasRef.current.offsetWidth;
+        canvasRef.current.height = canvasRef.current.offsetHeight;
+      }
+    };
+
+    // Ajusta o width inicial e redesenha
+    handleResize();
+
+    // Adiciona o listener para redimensionamento
+    window.addEventListener("resize", handleResize);
+
+    // Remove o listener ao desmontar o componente
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     if (status === "ajustes") {
       drawFull(
         canvasRef,
@@ -110,7 +127,7 @@ const MqttPage = () => {
         rotation,
       );
     }
-  }, [padding, curveIntensity, rotation, status]);
+  }, [padding, curveIntensity, rotation, status, canvasRef]);
 
   // Cria as listas de buffer e Track
   useEffect(() => {
@@ -134,7 +151,6 @@ const MqttPage = () => {
 
         // Verifica se a lista de traçados anteriores (prevBuffer) tem menos que 5 posições
         if (prevBuffer.length < 5) {
-          
           // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
           if (prevBuffer.length == 0) {
             return [position];
@@ -143,7 +159,6 @@ const MqttPage = () => {
           // Se a lista de traçados anteriores tiver algum item
 
           if (track.length > 0) {
-            
             const lastPositionTrack = track[0]; // Pega a última posição registrada em 'Track'
 
             // Calcula a distância entre a última posição de 'Track' e a nova posição 'position'
@@ -153,7 +168,6 @@ const MqttPage = () => {
               position.lat,
               position.long,
             );
-            
 
             // Se a distância for menor que 4 metros, a nova posição será adicionada
             if (distanceFive > bufferDistanceMin) {
@@ -179,9 +193,7 @@ const MqttPage = () => {
 
           // Atualiza a lista 'Track' com base na distância entre a última posição e a média calculada
           setTrack((prevTrack) => {
-            
             if (prevTrack.length > 0) {
-              
               const lastPosition = prevTrack[0]; // Pega a última posição registrada em 'Track'
 
               // Calcula a distância entre a última posição e a média das 5 últimas posições
@@ -215,7 +227,7 @@ const MqttPage = () => {
 
     const tracado = track.slice(0, track.length - 3);
     setMinPoints(tracado.length);
-    console.log(tracado)
+
     if (tracado.length >= pointsMin) {
       const length = tracado.length - 1;
       const distance = haversineDistance(
@@ -302,7 +314,7 @@ const MqttPage = () => {
         padding,
       );
     }
-  }, [track]); // Dependências que devem acionar a atualização
+  }, [track, canvasRef]); // Dependências que devem acionar a atualização
 
   const sendMode = (newMode) => {
     if (client) {
@@ -355,7 +367,7 @@ const MqttPage = () => {
   const saveTrack = () => {
     if (client) {
       sendMode(0);
-  
+
       // Certifique-se de que 'trackData' inclua os valores de 'padding' e 'curveintensity'
       const trackData = {
         name: trackName, // ou algum outro valor relevante para 'name'
@@ -365,7 +377,7 @@ const MqttPage = () => {
         curveintensity: curveIntensity, // campo de curveintensity
         rotation: rotation,
       };
-  
+
       fetch(`${BASE_URL}/api/v1/tracks`, {
         method: "POST",
         headers: {
@@ -377,7 +389,7 @@ const MqttPage = () => {
           if (!response.ok) {
             throw new Error("Failed to save track");
           }
-  
+
           return response.json();
         })
         .then((data) => {
@@ -400,7 +412,7 @@ const MqttPage = () => {
     setTrackName("");
     setInnerTrack([]);
     setOuterTrack([]);
-    setPadding(50);
+    setPadding(0.1);
     setCurveIntensity(0.2);
     cleanMetrics();
     sendMode(0);
@@ -763,10 +775,12 @@ const MqttPage = () => {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Ajustar Padding
                         </label>
+
                         <input
                           type="range"
                           min="0"
-                          max="300"
+                          max="0.40"
+                          step="0.005"
                           value={padding}
                           onChange={(e) => setPadding(Number(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -907,11 +921,11 @@ const MqttPage = () => {
             </>
           )}
 
-            <CanvasDisplay
-              canvasRef={canvasRef}
-              width={"w-full"}
-              height={"2xl:h-2/5 h-3/4"}
-            />
+          <canvas
+            ref={canvasRef}
+            className={`border border-black dark:bg-gray-900 rounded w-full 2xl:h-2/5 h-3/4`}
+            id="tracado"
+          />
         </div>
       </div>
     </main>

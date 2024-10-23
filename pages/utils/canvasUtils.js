@@ -23,18 +23,31 @@ const getBounds = (outer) => {
   return bounds;
 };
 
-const getPadding = (padding, width, height) => {
-  if (padding * 2.5 < width && padding * 2.5 < height) {
-    return padding;
+const getPadding = (width, height, percentage) => {
+  if (
+    typeof width !== "number" ||
+    typeof height !== "number" ||
+    typeof percentage !== "number"
+  ) {
+    throw new Error("Width, height e percentage devem ser números.");
   }
-  return getPadding(padding / 2, width, height);
+
+  if (percentage < 0 || percentage > 1) {
+    throw new Error("O percentage deve estar entre 0 e 1.");
+  }
+
+  // Calcula a média geométrica entre width e height
+  const averageDimension = Math.sqrt(width * height);
+
+  // Retorna o padding baseado na média geométrica e percentual
+  return averageDimension * percentage;
 };
 
 export const drawFull = (
   canvasRef,
   inner,
   outer,
-  paddingInitial = 50,
+  paddingInitial = 0, // Controle de zoom
   curveIntensity = 0.2,
   rotation = 0,
 ) => {
@@ -43,11 +56,10 @@ export const drawFull = (
   const ctx = canvas.getContext("2d");
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  console.log(canvas.width);
-  console.log(canvas.height);
-  const padding = getPadding(paddingInitial, canvas.width, canvas.height);
 
-  // Obtém os limites utilizando a função getBounds
+  // Calcula o padding ajustado com base no padding inicial e o tamanho do canvas
+  const padding = getPadding(canvas.width, canvas.height, paddingInitial);
+
   const bounds = getBounds(outer);
   const adjustedScaleX =
     (canvas.width - 2 * padding) / (bounds.longMax - bounds.longMin);
@@ -56,7 +68,6 @@ export const drawFull = (
 
   const rotationAngle = (rotation * Math.PI) / 180;
 
-  // Função para rotacionar um ponto em torno do centro do canvas
   const rotatePoint = (x, y) => {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -80,7 +91,6 @@ export const drawFull = (
       const y =
         canvas.height - ((pos.lat - bounds.latMin) * adjustedScaleY + padding);
 
-      // Aplica a rotação no ponto
       const { x: rotatedX, y: rotatedY } = rotatePoint(x, y);
 
       if (index === 0) {
@@ -92,7 +102,6 @@ export const drawFull = (
           canvas.height -
           ((prev.lat - bounds.latMin) * adjustedScaleY + padding);
 
-        // Aplica a rotação no ponto anterior
         const { x: prevRotatedX, y: prevRotatedY } = rotatePoint(prevX, prevY);
 
         const midX = (prevRotatedX + rotatedX) / 2;
@@ -107,7 +116,6 @@ export const drawFull = (
       }
     });
 
-    // Curva entre o último e o primeiro ponto
     const last = path[path.length - 1];
     const lastX = (last.long - bounds.longMin) * adjustedScaleX + padding;
     const lastY =
@@ -120,7 +128,6 @@ export const drawFull = (
       canvas.height - ((first.lat - bounds.latMin) * adjustedScaleY + padding);
     const { x: firstRotatedX, y: firstRotatedY } = rotatePoint(firstX, firstY);
 
-    // Criando uma curva entre o último e o primeiro ponto
     const midX = (lastRotatedX + firstRotatedX) / 2;
     const midY = (lastRotatedY + firstRotatedY) / 2;
 
@@ -137,10 +144,7 @@ export const drawFull = (
     ctx.stroke();
   };
 
-  // Desenha o inner com suavização
   drawCurvedPath(inner, "white");
-
-  // Desenha o outer com suavização
   drawCurvedPath(outer, "white");
 };
 
