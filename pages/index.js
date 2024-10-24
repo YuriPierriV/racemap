@@ -795,7 +795,7 @@ const MqttPage = () => {
                         <input
                           type="range"
                           min="0"
-                          max="1"
+                          max="0.5"
                           step="0.01"
                           value={curveIntensity}
                           onChange={(e) =>

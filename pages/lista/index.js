@@ -11,7 +11,7 @@ export default function Lista() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null); // Renomeado
   //removi o inner e outer trace
-  const [padding, setPadding] = useState(50);
+  const [padding, setPadding] = useState(0);
   const [curveIntensity, setCurveIntensity] = useState(0.2);
   const [rotation, setRotation] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
