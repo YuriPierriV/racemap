@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import kartIcon from "assets/kart_icon.png"; // Import the icon image
 
 const AsideRace = ({
   onStartRace,
