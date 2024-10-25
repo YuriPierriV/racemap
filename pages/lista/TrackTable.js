@@ -5,16 +5,16 @@ export default function TrackTable({
   listTrack,
   setDropdownOpen,
   dropdownOpen,
-  viewTrack, // Renomeado
-  deleteTrack, // Renomeado
+  viewTrack,
+  deleteTrack,
   setIsEditing,
   setFormData,
 }) {
-  const startEdit = (trackId) => { // Renomeado
-    const track = listTrack.find(t => t.id === trackId); // Renomeado
+  const startEdit = (trackId) => {
+    const track = listTrack.find((t) => t.id === trackId);
     if (track) {
       setFormData({
-        trackId: track.id, // Renomeado
+        trackId: track.id,
         name: track.name,
         inner_track: track.inner_track,
         outer_track: track.outer_track,
@@ -29,12 +29,12 @@ export default function TrackTable({
 
   return (
     <div className="w-full pr-4">
-      <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 border-separate border-spacing-y-2">
+      <table className="w-full text-sm text-left text-text dark:text-dark-text border-separate border-spacing-y-2">
         <tbody>
-          {listTrack.map((track) => ( // Renomeado
-            <tr className="bg-slate-800 rounded-lg shadow-md" key={track.id}>
-              <td className="px-6 py-4 font-medium text-white">{track.name}</td>
-              <td className="px-6 py-4 text-gray-400">
+          {listTrack.map((track) => (
+            <tr className="bg-secondary dark:bg-dark-secondary rounded-lg shadow-md" key={track.id}>
+              <td className="px-6 py-4 font-medium text-text dark:text-dark-text">{track.name}</td>
+              <td className="px-6 py-4 text-gray-400 dark:text-gray-500">
                 {new Date(track.created_at).toLocaleString('pt-BR', {
                   day: '2-digit',
                   month: '2-digit',
@@ -47,20 +47,20 @@ export default function TrackTable({
               </td>
               <td className="px-6 py-4">
                 <button
-                  onClick={() => viewTrack(track.id)} // Renomeado
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => viewTrack(track.id)}
+                  className="bg-accent dark:bg-dark-accent hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                 >
                   Visualizar
                 </button>
               </td>
               <td className="px-6 py-4">
                 <DropdownActions
-                  trackId={track.id} // Renomeado
+                  trackId={track.id}
                   dropdownOpen={dropdownOpen}
                   setDropdownOpen={setDropdownOpen}
                   startEdit={startEdit}
-                  deleteTrack={deleteTrack} // Renomeado
-                  viewTrack={viewTrack} // Renomeado
+                  deleteTrack={deleteTrack}
+                  viewTrack={viewTrack}
                 />
               </td>
             </tr>
