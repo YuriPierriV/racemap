@@ -6,8 +6,6 @@ const AsideRace = ({
   onManageKarts,
   onEditTrack,
 }) => {
-  const [selectedMenu, setSelectedMenu] = useState(null);
-
   return (
     <aside className="md:block w-64 bg-gray-800 text-white flex flex-col h-screen">
       <div
@@ -37,9 +35,7 @@ const AsideRace = ({
 
           <div className="flex flex-col justify-start items-center  border-b border-gray-600 w-full ">
             <button
-              onClick={() =>
-                setSelectedMenu(selectedMenu === "karts" ? null : "karts")
-              }
+              onClick={() => onManageKarts()}
               className="flex justify-start items-center w-full p-6 space-x-6 focus:outline-none text-white focus:text-indigo-400 rounded"
             >
               <svg
@@ -53,49 +49,6 @@ const AsideRace = ({
               </svg>
               <p className="text-sm leading-5 uppercase">Karts</p>
             </button>
-            {selectedMenu === "karts" && (
-              <div
-                id="menu2"
-                className="flex justify-start flex-col w-full md:w-auto items-start pb-2"
-              >
-                <button className="flex justify-start items-center space-x-6 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 text-gray-400 rounded px-3 py-2 w-full md:w-52">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
-
-                  <p className="text-base leading-4">Adicionar</p>
-                </button>
-                <button className="flex justify-start items-center space-x-6 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 text-gray-400 rounded px-3 py-2 w-full md:w-52">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                    />
-                  </svg>
-
-                  <p className="text-base leading-4">Gerenciar</p>
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col justify-start items-center  border-b border-gray-600 w-full ">
@@ -115,49 +68,6 @@ const AsideRace = ({
 
               <p className="text-sm leading-4 uppercase">Pilotos</p>
             </button>
-            {selectedMenu === "pilotos" && (
-              <div
-                id="menu1"
-                className="flex justify-start flex-col w-full md:w-auto items-start pb-2"
-              >
-                <button className="flex justify-start items-center space-x-6 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 text-gray-400 rounded px-3 py-2 w-full md:w-52">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
-
-                  <p className="text-base leading-4">Adicionar</p>
-                </button>
-                <button className="flex justify-start items-center space-x-6 hover:text-white focus:bg-gray-700 focus:text-white hover:bg-gray-700 text-gray-400 rounded px-3 py-2 w-full md:w-52">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z"
-                    />
-                  </svg>
-
-                  <p className="text-base leading-4">Gerenciar</p>
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
