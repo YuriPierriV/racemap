@@ -1,6 +1,4 @@
-import mqtt from "mqtt";
 import React, { useEffect, useState, useRef } from "react";
-import { connectUrl, options } from "infra/mqttConfig.js";
 import { drawTrack, drawFull } from "./utils/canvasUtils";
 import { useRouter } from "next/router";
 import { BASE_URL } from "./utils/config";
@@ -12,7 +10,9 @@ import {
   bufferDistanceMin,
 } from "pages/constants/distances";
 import ModalRace from "./race/ModalRace";
-import CanvasDisplay from "./lista/CanvasDisplay";
+import useMqttPublish from "./mqtt/useMqttPublish";
+import useMqttSubscribe from "./mqtt/useMqttSubscribe";
+import useMqttMessages from "./mqtt/useMqttMessages";
 
 const MqttPage = () => {
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
@@ -21,8 +21,13 @@ const MqttPage = () => {
 
   const [outerTrack, setOuterTrack] = useState([]); //lista de posições quando criar traçado 1
   const [innerTrack, setInnerTrack] = useState([]); //lista de posições quando criar traçado 2
-  const [connection, setConnection] = useState(false); //vizualização da conexão com o mqtt
-  const [client, setClient] = useState(null); // conexão em si do mqtt
+
+  const [topics, setTopics] = useState([
+    "kart/ESP8266Client-54f691",
+    "gpsCheck",
+  ]);
+
+  const [gpsList, setGpsList] = useState([]);
 
   const [mode, setMode] = useState(0); //modo do gps
 
@@ -48,54 +53,32 @@ const MqttPage = () => {
 
   const canvasRef = useRef(null);
   const router = useRouter();
-  //fica conectado
-  useEffect(() => {
-    const mqttClient = mqtt.connect(connectUrl, options);
-    setClient(mqttClient);
 
-    mqttClient.on("connect", () => {
-      mqttClient.subscribe("kart", { qos: 2 }, (err) => {
-        setConnection(true);
-        sendMode(0);
-        if (err) {
-          console.error("Failed to subscribe:", err);
-        }
-      });
-    });
+  //funções basicas para utilizar o mqtt
 
-    mqttClient.on("error", (err) => {
-      console.error("Connection error:", err);
-      setConnection(false);
-    });
+  const { publishMessage, isConnected } = useMqttPublish();
 
-    mqttClient.on("close", () => {
-      setConnection(false);
-      return () => {
-        mqttClient.end();
-        cancelTrack();
-      };
-    });
+  useMqttSubscribe(topics);
 
-    return () => {
-      mqttClient.end();
-      cancelTrack();
-    };
-  }, []);
+  useMqttMessages((topic, message) => {
+    console.log(`Recebido no tópico ${topic}: ${message}`);
 
-  // vai recebendo
-  useEffect(() => {
-    if (client) {
-      client.on("message", (topic, payload) => {
-        const message = JSON.parse(payload.toString());
-        setMessages((prevMessages) => {
-          //prevMessages é a lista de mensagens anterior
-          const updatedMessages = [message, ...prevMessages]; //lista com a mensagem nova
-          return updatedMessages.slice(0, 10); //mensagens vai virar
-        });
+    // Verifica se o tópico é gpsCheck e atualiza a lista de GPS
+    if (topic === "gpsCheck") {
+      setGpsList((prev) => [...prev, message]);
+    }
+
+    // Verifica se o tópico contém "kart"
+    if (topic.includes("kart")) {
+      setMessages((prevMessages) => {
+        // Adiciona a nova mensagem à lista de mensagens
+        const updatedMessages = [message, ...prevMessages];
+
+        // Retorna apenas as 10 mensagens mais recentes
+        return updatedMessages.slice(0, 10);
       });
     }
-    return;
-  }, [client]);
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -317,16 +300,8 @@ const MqttPage = () => {
   }, [track, canvasRef]); // Dependências que devem acionar a atualização
 
   const sendMode = (newMode) => {
-    if (client) {
-      setMode((prevMode) => {
-        return newMode;
-      });
-      client.publish("config", String(newMode), { qos: 2 }, (err) => {
-        if (err) {
-          console.error("Failed to publish:", err);
-        }
-      });
-    }
+    setMode(newMode); // Atualiza o estado do modo local
+    publishMessage("config", String(newMode)); // Usa publishMessage para publicar o novo modo
   };
 
   const startTrack = () => {
@@ -442,7 +417,7 @@ const MqttPage = () => {
     <main className="bg-slate-700">
       <div className="grid 2xl:grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
         <div>
-          {connection ? (
+          {isConnected ? (
             <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-green-900 dark:text-green-300 my-3">
               <span className="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
               Conectado
@@ -833,7 +808,7 @@ const MqttPage = () => {
                       </button>
                       <button
                         onClick={saveTrack}
-                        disabled={!connection || mode === 10 || mode === 10}
+                        disabled={!isConnected || mode === 10 || mode === 10}
                         className="px-6 py-2 bg-blue-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                       >
                         Salvar Traçado
@@ -889,7 +864,7 @@ const MqttPage = () => {
                 <h3 className="text-xl font-semibold mb-2">Modo:</h3>
                 <button
                   onClick={() => sendMode(0)}
-                  disabled={!connection || mode === 10 || mode === 0}
+                  disabled={!isConnected || mode === 10 || mode === 0}
                   className={`px-6 py-2 rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg bg-red-500 text-white hover:bg-red-600'
                     }`}
                 >
@@ -897,14 +872,14 @@ const MqttPage = () => {
                 </button>
                 <button
                   onClick={() => sendMode(1)}
-                  disabled={!connection || mode === 10 || mode === 1}
+                  disabled={!isConnected || mode === 10 || mode === 1}
                   className="px-6 py-2 bg-green-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   On
                 </button>
                 <button
                   onClick={startTrack}
-                  disabled={!connection || mode === 10 || mode === 10}
+                  disabled={!isConnected || mode === 10 || mode === 10}
                   className="px-6 py-2 bg-blue-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   Criar Traçado
