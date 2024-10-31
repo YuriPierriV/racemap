@@ -47,7 +47,7 @@ const Painel = () => {
                     <div
                         key={track.id}
                         className={`relative overflow-hidden rounded-xl shadow-lg transition-transform transform hover:scale-105 
-                            bg-gradient-to-r ${track.created_at > new Date().toISOString() ? 'from-primary to-secondary' : 'from-dark-primary to-dark-secondary'} 
+                            bg-gradient-to-r ${track.created_at > new Date().toISOString() ? 'from-primary to-secondary' : 'from-dark-secondary to-dark-primary'} 
                             text-white p-6`}
                     >
                         <div className="absolute inset-0 bg-black opacity-25"></div>
