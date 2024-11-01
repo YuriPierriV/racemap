@@ -54,7 +54,7 @@ const MqttPage = () => {
     setClient(mqttClient);
 
     mqttClient.on("connect", () => {
-      mqttClient.subscribe("kart", { qos: 2 }, (err) => {
+      mqttClient.subscribe("kart/ESP8266Client-54f691", { qos: 2 }, (err) => {
         setConnection(true);
         sendMode(0);
         if (err) {

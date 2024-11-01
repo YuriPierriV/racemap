@@ -40,25 +40,31 @@ const Painel = () => {
     if (error) return <div className="text-red-500">{error}</div>;
 
     return (
-        <div className="p-4">
+        <div className="p-2">
             <h1 className="text-2xl font-bold mb-4 text-center">Tracks</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {tracks.map((track) => (
                     <div
                         key={track.id}
-                        className={`relative overflow-hidden rounded-xl shadow-lg transition-transform transform hover:scale-105 
-                            bg-gradient-to-r ${track.created_at > new Date().toISOString() ? 'from-primary to-secondary' : 'from-dark-secondary to-dark-primary'} 
-                            text-white p-6`}
+                        className={`relative overflow-hidden rounded-lg shadow-md transition-transform transform hover:scale-105 
+                            bg-gradient-to-r ${
+                                track.created_at > new Date().toISOString()
+                                    ? 'from-primary to-secondary dark:from-dark-primary dark:to-dark-secondary'
+                                    : 'from-background to-secondary dark:from-dark-secondary dark:to-dark-primary'
+                            } 
+                            text-white p-4`}
                     >
                         <div className="absolute inset-0 bg-black opacity-25"></div>
-                        <h2 className="text-xl font-semibold mb-2">{track.name}</h2>
+                        <h2 className="text-lg font-semibold mb-2 text-text dark:text-dark-text">
+                            {track.name}
+                        </h2>
                         <CanvasDisplay
                             track={track}
                             width="w-full"
-                            height="h-[250px]" // Aumentar a altura do canvas
+                            height="h-[200px]"
                         />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-opacity-50 bg-black rounded-bl-xl rounded-br-xl">
-                            <p className="text-sm">
+                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-opacity-50 bg-black rounded-bl-lg rounded-br-lg">
+                            <p className="text-sm text-text dark:text-dark-text">
                                 Criado em: {new Date(track.created_at).toLocaleDateString()} {new Date(track.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                         </div>
