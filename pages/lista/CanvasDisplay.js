@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { drawFull } from "pages/utils/canvasUtils";
 
 export default function CanvasDisplay({ track, width, height }) {
-  const canvasRef = React.createRef(); // Adiciona a referência de canvasRef
+  const canvasRef = useRef(null); // Use useRef ao invés de createRef para evitar recriação da ref em renderizações
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,6 +35,7 @@ export default function CanvasDisplay({ track, width, height }) {
 
   useEffect(() => {
     if (track) {
+      // Redesena o conteúdo do canvas sempre que padding, curveIntensity ou rotation mudarem
       drawFull(
         canvasRef,
         track.inner_track,
@@ -44,7 +45,7 @@ export default function CanvasDisplay({ track, width, height }) {
         track.rotation,
       );
     }
-  }, [track]);
+  }, [track, track?.padding, track?.curveIntensity, track?.rotation]);
 
   return (
     <canvas
