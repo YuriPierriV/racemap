@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import mqtt from "mqtt";
 import { connectUrl, options } from "infra/mqttConfig.js";
-import Custom404 from "pages/404";
 
 const MqttContext = createContext();
 
@@ -58,5 +57,3 @@ export const MqttProvider = ({ clientId, children }) => {
 
 // Hook para acessar o contexto MQTT
 export const useMqtt = () => useContext(MqttContext);
-
-export default Custom404;

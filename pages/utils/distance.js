@@ -1,5 +1,3 @@
-import Custom404 from "pages/404";
-
 export const haversineDistance = (lat1, long1, lat2, long2) => {
   const R = 6371000; // Raio da Terra em metros
   const toRadians = (degrees) => degrees * (Math.PI / 180);
@@ -14,5 +12,3 @@ export const haversineDistance = (lat1, long1, lat2, long2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distância em metros
 };
-
-export default Custom404;
