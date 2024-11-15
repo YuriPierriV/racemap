@@ -1,4 +1,6 @@
 // Supondo que a função getBounds esteja definida em algum lugar
+import Custom404 from "pages/404";
+
 const getBounds = (outer) => {
   if (outer.length === 0) {
     throw new Error("O array não pode estar vazio");
@@ -240,3 +242,5 @@ export const drawTrack = (
     ctx.fill();
   });
 };
+
+export default Custom404;
