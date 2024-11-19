@@ -13,6 +13,8 @@ import ModalRace from "./race/ModalRace";
 import useMqttPublish from "./mqtt/useMqttPublish";
 import useMqttSubscribe from "./mqtt/useMqttSubscribe";
 import useMqttMessages from "./mqtt/useMqttMessages";
+import AddGps from "./gps/AddGps";
+import GpsList from "./kart/ListGps";
 
 const MqttPage = () => {
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
@@ -53,6 +55,16 @@ const MqttPage = () => {
 
   const canvasRef = useRef(null);
   const router = useRouter();
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar o modal
+
+  const closeModal = () => {
+    setIsModalOpen(false); // Fecha o modal
+  };
+
+  const configKart = () => {
+    setIsModalOpen(true); // Abre o modal ao gerenciar karts
+  };
 
   //funções basicas para utilizar o mqtt
 
@@ -415,6 +427,9 @@ const MqttPage = () => {
 
   return (
     <main className="bg-slate-700">
+      {isModalOpen && (
+        <AddGps onClose={closeModal} /> // Renderiza o ModalKart se isModalOpen for true
+      )}
       <div className="grid 2xl:grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
         <div>
           {isConnected ? (
@@ -820,6 +835,31 @@ const MqttPage = () => {
             </div>
           ) : (
             <div>
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-10 p-5">
+                <div className="group bg-white shadow-lg shadow-gray-200 rounded-xl p-2.5 transition-all duration-500  hover:shadow-gray-300">
+                  <div className="flex flex-col items-center justify-center py-6 px-4 gap-4 text-center">
+                    <div className="flex items-center justify-between w-full mb-2">
+                      <h4 className="font-manrope font-bold text-xl text-gray-900 ">
+                        Adicionar GPS
+                      </h4>
+                    </div>
+                    <p className="text-base font-medium text-gray-500 mb-4 text-left">
+                      Conecte seu GPS para iniciar um traçado e participar de
+                      corridas.
+                    </p>
+
+                    <button
+                      onClick={configKart}
+                      className="rounded-lg py-2.5 px-6 text-center w-full text-white bg-indigo-600 font-semibold text-lg transition-all duration-500 hover:bg-indigo-700"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <GpsList></GpsList>
+                </div>
+              </div>
               <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
 
               <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
