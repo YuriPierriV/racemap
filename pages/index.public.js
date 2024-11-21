@@ -17,17 +17,16 @@ import AddGps from "./gps/AddGps";
 import GpsList from "./kart/ListGps";
 
 const MqttPage = () => {
+  const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
   const [buffer, setBuffer] = useState([]); //lista das ultimas "5" ultimas posições na hora de criar um traçado, buffer para media
+
   const [track, setTrack] = useState([]); //lista de posições quando criar traçado
 
   const [outerTrack, setOuterTrack] = useState([]); //lista de posições quando criar traçado 1
   const [innerTrack, setInnerTrack] = useState([]); //lista de posições quando criar traçado 2
 
-  const [topics, setTopics] = useState([
-    "kart/ESP8266Client-54f691",
-    "gpsCheck",
-  ]);
+  const [topics, setTopics] = useState([]);
 
   const [gpsList, setGpsList] = useState([]);
 
@@ -56,32 +55,18 @@ const MqttPage = () => {
   const canvasRef = useRef(null);
   const router = useRouter();
 
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar o modal
-
-  const closeModal = () => {
-    setIsModalOpen(false); // Fecha o modal
-  };
-
-  const configKart = () => {
-    setIsModalOpen(true); // Abre o modal ao gerenciar karts
-  };
-
   //funções basicas para utilizar o mqtt
 
   const { publishMessage, isConnected } = useMqttPublish();
 
   useMqttSubscribe(topics);
 
+  useEffect(() => {
+    fetchGpsData();
+  }, []);
+
   useMqttMessages((topic, message) => {
-    console.log(`Recebido no tópico ${topic}: ${message}`);
-
-    // Verifica se o tópico é gpsCheck e atualiza a lista de GPS
-    if (topic === "gpsCheck") {
-      setGpsList((prev) => [...prev, message]);
-    }
-
-    // Verifica se o tópico contém "kart"
-    if (topic.includes("kart")) {
+    if (topics.includes(topic)) {
       setMessages((prevMessages) => {
         // Adiciona a nova mensagem à lista de mensagens
         const updatedMessages = [message, ...prevMessages];
@@ -411,6 +396,22 @@ const MqttPage = () => {
     setStatus("aguardando");
   };
 
+  const fetchGpsData = async () => {
+    try {
+      const response = await fetch("/api/v1/chips");
+      const data = await response.json();
+      console.log(data);
+
+      // Construir as strings no formato desejado e atualizar o estado
+      const topics = data.map((item) => `webserver/${item.chip_id}`);
+      setTopics(topics);
+    } catch (error) {
+      console.error("Erro ao buscar os dados de GPS:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToLista = async () => {
     // Se o cliente MQTT estiver conectado, desconecte antes de navegar
 
@@ -427,9 +428,6 @@ const MqttPage = () => {
 
   return (
     <main className="bg-slate-700">
-      {isModalOpen && (
-        <AddGps onClose={closeModal} /> // Renderiza o ModalKart se isModalOpen for true
-      )}
       <div className="grid 2xl:grid-cols-2 gap-5 p-4 bg-slate-700 min-h-screen container mx-auto">
         <div>
           {isConnected ? (
@@ -835,30 +833,8 @@ const MqttPage = () => {
             </div>
           ) : (
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-10 p-5">
-                <div className="group bg-white shadow-lg shadow-gray-200 rounded-xl p-2.5 transition-all duration-500  hover:shadow-gray-300">
-                  <div className="flex flex-col items-center justify-center py-6 px-4 gap-4 text-center">
-                    <div className="flex items-center justify-between w-full mb-2">
-                      <h4 className="font-manrope font-bold text-xl text-gray-900 ">
-                        Adicionar GPS
-                      </h4>
-                    </div>
-                    <p className="text-base font-medium text-gray-500 mb-4 text-left">
-                      Conecte seu GPS para iniciar um traçado e participar de
-                      corridas.
-                    </p>
-
-                    <button
-                      onClick={configKart}
-                      className="rounded-lg py-2.5 px-6 text-center w-full text-white bg-indigo-600 font-semibold text-lg transition-all duration-500 hover:bg-indigo-700"
-                    >
-                      Adicionar
-                    </button>
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <GpsList></GpsList>
-                </div>
+              <div className="w-full my-5">
+                <GpsList></GpsList>
               </div>
               <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
 

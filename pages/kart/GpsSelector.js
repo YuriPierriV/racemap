@@ -23,12 +23,9 @@ const GpsSelector = ({ onClose }) => {
         throw new Error("Erro ao adicionar o chip");
       }
 
-      const data = await response.json();
-      console.log("Chip adicionado com sucesso:", data);
-
+      onClose();
       // Reseta o input após o sucesso
       setGpsChip("");
-      alert("Chip adicionado com sucesso!");
     } catch (error) {
       console.error(error.message);
       alert("Erro ao adicionar o chip. Tente novamente.");
