@@ -8,6 +8,7 @@ const mqttConfig = {
   clientId: `mqtt_${Math.random().toString(16).slice(3)}`,
   username: process.env.NEXT_PUBLIC_HIVEMQ_USERNAME,
   password: process.env.NEXT_PUBLIC_HIVEMQ_PASSWORD,
+  keepAlive: 60,
 };
 
 const connectUrl = `${mqttConfig.protocol}://${mqttConfig.host}:${mqttConfig.port}/mqtt`;

@@ -13,19 +13,20 @@ import ModalRace from "./race/ModalRace";
 import useMqttPublish from "./mqtt/useMqttPublish";
 import useMqttSubscribe from "./mqtt/useMqttSubscribe";
 import useMqttMessages from "./mqtt/useMqttMessages";
+import AddGps from "./gps/AddGps";
+import GpsList from "./kart/ListGps";
 
 const MqttPage = () => {
+  const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]); //historico das mensagens do gps
   const [buffer, setBuffer] = useState([]); //lista das ultimas "5" ultimas posições na hora de criar um traçado, buffer para media
+
   const [track, setTrack] = useState([]); //lista de posições quando criar traçado
 
   const [outerTrack, setOuterTrack] = useState([]); //lista de posições quando criar traçado 1
   const [innerTrack, setInnerTrack] = useState([]); //lista de posições quando criar traçado 2
 
-  const [topics, setTopics] = useState([
-    "kart/ESP8266Client-54f691",
-    "gpsCheck",
-  ]);
+  const [topics, setTopics] = useState([]);
 
   const [gpsList, setGpsList] = useState([]);
 
@@ -60,16 +61,12 @@ const MqttPage = () => {
 
   useMqttSubscribe(topics);
 
+  useEffect(() => {
+    fetchGpsData();
+  }, []);
+
   useMqttMessages((topic, message) => {
-    console.log(`Recebido no tópico ${topic}: ${message}`);
-
-    // Verifica se o tópico é gpsCheck e atualiza a lista de GPS
-    if (topic === "gpsCheck") {
-      setGpsList((prev) => [...prev, message]);
-    }
-
-    // Verifica se o tópico contém "kart"
-    if (topic.includes("kart")) {
+    if (topics.includes(topic)) {
       setMessages((prevMessages) => {
         // Adiciona a nova mensagem à lista de mensagens
         const updatedMessages = [message, ...prevMessages];
@@ -397,6 +394,22 @@ const MqttPage = () => {
     longMax.current = -Infinity;
     drawTrack(canvasRef, "externo", false, []);
     setStatus("aguardando");
+  };
+
+  const fetchGpsData = async () => {
+    try {
+      const response = await fetch("/api/v1/chips");
+      const data = await response.json();
+      console.log(data);
+
+      // Construir as strings no formato desejado e atualizar o estado
+      const topics = data.map((item) => `webserver/${item.chip_id}`);
+      setTopics(topics);
+    } catch (error) {
+      console.error("Erro ao buscar os dados de GPS:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const goToLista = async () => {
@@ -820,6 +833,9 @@ const MqttPage = () => {
             </div>
           ) : (
             <div>
+              <div className="w-full my-5">
+                <GpsList></GpsList>
+              </div>
               <h2 className="text-2xl font-bold mb-4">Histórico:</h2>
 
               <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
