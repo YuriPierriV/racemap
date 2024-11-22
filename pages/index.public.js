@@ -13,8 +13,9 @@ import ModalRace from "./race/ModalRace";
 import useMqttPublish from "./mqtt/useMqttPublish";
 import useMqttSubscribe from "./mqtt/useMqttSubscribe";
 import useMqttMessages from "./mqtt/useMqttMessages";
-import AddGps from "./gps/AddGps";
+
 import GpsList from "./kart/ListGps";
+import { useChangeMode } from "./kart/ModeSelector";
 
 const MqttPage = () => {
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ const MqttPage = () => {
   const [topics, setTopics] = useState([]);
 
   const [gpsList, setGpsList] = useState([]);
+  const [selectedGps, setSelectedGps] = useState([]);
 
   const [mode, setMode] = useState(0); //modo do gps
 
@@ -60,6 +62,7 @@ const MqttPage = () => {
   const { publishMessage, isConnected } = useMqttPublish();
 
   useMqttSubscribe(topics);
+  const { changeMode } = useChangeMode(); // hook change mode
 
   useEffect(() => {
     fetchGpsData();
@@ -121,86 +124,88 @@ const MqttPage = () => {
           curveIntensity,
           rotation,
         );
-        sendMode(0);
+        sendMode(0, selectedGps);
         return;
       }
-      const position = { lat: messages[0].lat, long: messages[0].long };
+      if (messages[0].deviceId === selectedGps) {
+        const position = { lat: messages[0].lat, long: messages[0].long };
 
-      setBuffer((prevBuffer) => {
-        let updatedTracks; // Variável que vai armazenar as novas posições atualizadas
+        setBuffer((prevBuffer) => {
+          let updatedTracks; // Variável que vai armazenar as novas posições atualizadas
 
-        // Verifica se a lista de traçados anteriores (prevBuffer) tem menos que 5 posições
-        if (prevBuffer.length < 5) {
-          // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
-          if (prevBuffer.length == 0) {
-            return [position];
-          }
-
-          // Se a lista de traçados anteriores tiver algum item
-
-          if (track.length > 0) {
-            const lastPositionTrack = track[0]; // Pega a última posição registrada em 'Track'
-
-            // Calcula a distância entre a última posição de 'Track' e a nova posição 'position'
-            const distanceFive = haversineDistance(
-              lastPositionTrack.lat,
-              lastPositionTrack.long,
-              position.lat,
-              position.long,
-            );
-
-            // Se a distância for menor que 4 metros, a nova posição será adicionada
-            if (distanceFive > bufferDistanceMin) {
-              updatedTracks = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
-              return updatedTracks; // Retorna a lista atualizada
+          // Verifica se a lista de traçados anteriores (prevBuffer) tem menos que 5 posições
+          if (prevBuffer.length < 5) {
+            // Se a lista estiver vazia, simplesmente retorna a nova posição como a primeira posição da lista
+            if (prevBuffer.length == 0) {
+              return [position];
             }
 
-            // Se a distância for maior que 4 metros, retorna a lista anterior sem alterações
+            // Se a lista de traçados anteriores tiver algum item
 
-            return prevBuffer;
-          } else {
-            // Caso a lista nao tenha posições, adiciona a nova posição diretamente
-            updatedTracks = [position, ...prevBuffer];
+            if (track.length > 0) {
+              const lastPositionTrack = track[0]; // Pega a última posição registrada em 'Track'
 
-            return updatedTracks; // Retorna a lista atualizada
-          }
-        } else {
-          // Caso a lista de traçados anteriores já tenha 5 posições, adiciona a nova posição
-          updatedTracks = [position, ...prevBuffer]; // Mantém apenas as 5 posições mais recentes
-          // Calcula a média das latitudes e longitudes das 5 últimas posições
-
-          const avgPosition = avgPlace(updatedTracks);
-
-          // Atualiza a lista 'Track' com base na distância entre a última posição e a média calculada
-          setTrack((prevTrack) => {
-            if (prevTrack.length > 0) {
-              const lastPosition = prevTrack[0]; // Pega a última posição registrada em 'Track'
-
-              // Calcula a distância entre a última posição e a média das 5 últimas posições
-              const distance = haversineDistance(
-                lastPosition.lat,
-                lastPosition.long,
-                avgPosition.lat,
-                avgPosition.long,
+              // Calcula a distância entre a última posição de 'Track' e a nova posição 'position'
+              const distanceFive = haversineDistance(
+                lastPositionTrack.lat,
+                lastPositionTrack.long,
+                position.lat,
+                position.long,
               );
 
-              // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
-              if (distance > trackDistanceMin) {
-                return [avgPosition, ...prevTrack]; // Adiciona a média ao início da lista de 'Track'
+              // Se a distância for menor que 4 metros, a nova posição será adicionada
+              if (distanceFive > bufferDistanceMin) {
+                updatedTracks = [position, ...prevBuffer]; // Adiciona a nova posição no início da lista de traçados anteriores
+                return updatedTracks; // Retorna a lista atualizada
               }
 
-              return prevTrack;
-            } else {
-              // Se 'Track' estiver vazio, adiciona a nova posição média como o primeiro item
-              return [avgPosition];
-            }
-          });
+              // Se a distância for maior que 4 metros, retorna a lista anterior sem alterações
 
-          return [];
-        }
-      });
+              return prevBuffer;
+            } else {
+              // Caso a lista nao tenha posições, adiciona a nova posição diretamente
+              updatedTracks = [position, ...prevBuffer];
+
+              return updatedTracks; // Retorna a lista atualizada
+            }
+          } else {
+            // Caso a lista de traçados anteriores já tenha 5 posições, adiciona a nova posição
+            updatedTracks = [position, ...prevBuffer]; // Mantém apenas as 5 posições mais recentes
+            // Calcula a média das latitudes e longitudes das 5 últimas posições
+
+            const avgPosition = avgPlace(updatedTracks);
+
+            // Atualiza a lista 'Track' com base na distância entre a última posição e a média calculada
+            setTrack((prevTrack) => {
+              if (prevTrack.length > 0) {
+                const lastPosition = prevTrack[0]; // Pega a última posição registrada em 'Track'
+
+                // Calcula a distância entre a última posição e a média das 5 últimas posições
+                const distance = haversineDistance(
+                  lastPosition.lat,
+                  lastPosition.long,
+                  avgPosition.lat,
+                  avgPosition.long,
+                );
+
+                // Se a distância for maior que 2 metros e menor que 4 metros, adiciona a média à lista de traçados
+                if (distance > trackDistanceMin) {
+                  return [avgPosition, ...prevTrack]; // Adiciona a média ao início da lista de 'Track'
+                }
+
+                return prevTrack;
+              } else {
+                // Se 'Track' estiver vazio, adiciona a nova posição média como o primeiro item
+                return [avgPosition];
+              }
+            });
+
+            return [];
+          }
+        });
+      }
     }
-  }, [messages]);
+  }, [messages, selectedGps]);
 
   useEffect(() => {
     if (track.length <= 3) return;
@@ -228,7 +233,7 @@ const MqttPage = () => {
             ctxOuter,
             padding,
           );
-          sendMode(0);
+          sendMode(0, selectedGps);
           setStatus("ajustes");
           setInnerTrack(tracado);
           setTrack([]);
@@ -237,7 +242,7 @@ const MqttPage = () => {
         }
         if (status === "externo") {
           setStatus("pre-interno");
-          sendMode("0");
+          sendMode("0", selectedGps);
           setOuterTrack(tracado);
           setTrack([]);
           setBuffer([]);
@@ -296,14 +301,14 @@ const MqttPage = () => {
     }
   }, [track, canvasRef]); // Dependências que devem acionar a atualização
 
-  const sendMode = (newMode) => {
+  const sendMode = (newMode, chip_id) => {
+    changeMode(newMode, chip_id);
     setMode(newMode); // Atualiza o estado do modo local
     publishMessage("config", String(newMode)); // Usa publishMessage para publicar o novo modo
   };
 
   const startTrack = () => {
     setStatus("iniciando");
-    sendMode(10);
   };
 
   const avgPlace = (lista) => {
@@ -324,21 +329,22 @@ const MqttPage = () => {
     setMinPoints(0);
   };
 
-  const creatOuter = () => {
+  const creatOuter = (chip_id) => {
     cleanMetrics();
     setStatus("externo");
-    sendMode(10);
+
+    sendMode(10, chip_id);
   };
 
   const creatInner = () => {
     cleanMetrics();
     setStatus("interno");
-    sendMode(10);
+    sendMode(10, selectedGps);
   };
 
   const saveTrack = () => {
-    if (client) {
-      sendMode(0);
+    if (isConnected) {
+      sendMode(0, selectedGps);
 
       // Certifique-se de que 'trackData' inclua os valores de 'padding' e 'curveintensity'
       const trackData = {
@@ -387,7 +393,8 @@ const MqttPage = () => {
     setPadding(0.1);
     setCurveIntensity(0.2);
     cleanMetrics();
-    sendMode(0);
+    sendMode(0, selectedGps);
+    setSelectedGps(null);
     latMin.current = Infinity;
     latMax.current = -Infinity;
     longMin.current = Infinity;
@@ -400,9 +407,10 @@ const MqttPage = () => {
     try {
       const response = await fetch("/api/v1/chips");
       const data = await response.json();
-      console.log(data);
 
       // Construir as strings no formato desejado e atualizar o estado
+
+      setGpsList(data);
       const topics = data.map((item) => `webserver/${item.chip_id}`);
       setTopics(topics);
     } catch (error) {
@@ -521,11 +529,20 @@ const MqttPage = () => {
               {status === "iniciando" && (
                 <div>
                   <div>
-                    <form onSubmit={creatOuter}>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (selectedGps) {
+                          creatOuter(selectedGps);
+                        } else {
+                          alert("Por favor, selecione um GPS válido.");
+                        }
+                      }}
+                    >
                       <div className="space-y-12">
                         <div className="border-b border-gray-900/10 pb-12">
                           <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 dark:bg-gray-800 dark:border-gray-700 sm:p-4 sm:space-x-4 rtl:space-x-reverse p-3 space-x-2 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div className="sm:col-span-full">
+                            <div className="sm:col-span-full space-y-4">
                               <label className="block text-sm font-medium leading-6 text-white">
                                 Nome do traçado
                               </label>
@@ -537,6 +554,27 @@ const MqttPage = () => {
                                   placeholder="Nome do traçado"
                                   className="block w-full rounded-md border-0 py-1.5 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-0 focus:ring-inset focus:ring-blue-800 sm:text-sm sm:leading-6"
                                 />
+                              </div>
+                              <label className="block text-sm font-medium leading-6 text-white">
+                                Selecionar GPS
+                              </label>
+                              <div className="mt-2">
+                                <select
+                                  value={selectedGps}
+                                  onChange={(e) =>
+                                    setSelectedGps(e.target.value)
+                                  }
+                                  className="block w-full rounded-md border-0 py-3 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-0 focus:ring-inset focus:ring-blue-800 sm:text-sm sm:leading-6"
+                                >
+                                  <option value="" disabled>
+                                    Escolha um GPS
+                                  </option>
+                                  {gpsList.map((gps, index) => (
+                                    <option key={index} value={gps.chip_id}>
+                                      {gps.chip_id}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </div>
 
@@ -878,21 +916,7 @@ const MqttPage = () => {
             <>
               <div className="mb-4 mt-4">
                 <h3 className="text-xl font-semibold mb-2">Modo:</h3>
-                <button
-                  onClick={() => sendMode(0)}
-                  disabled={!isConnected || mode === 10 || mode === 0}
-                  className={`px-6 py-2 rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                >
-                  Off
-                </button>
-                <button
-                  onClick={() => sendMode(1)}
-                  disabled={!isConnected || mode === 10 || mode === 1}
-                  className="px-6 py-2 bg-green-500 text-white rounded-lg mr-3 font-bold transition-all duration-300 transform hover:scale-105 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
-                  On
-                </button>
+
                 <button
                   onClick={startTrack}
                   disabled={!isConnected || mode === 10 || mode === 10}

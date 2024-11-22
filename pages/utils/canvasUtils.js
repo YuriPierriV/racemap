@@ -50,6 +50,7 @@ export const drawFull = (
   paddingInitial = 0, // Controle de zoom
   curveIntensity = 0.2,
   rotation = 0,
+  gpsPositions = {}, // Adicionar posições dos GPS
 ) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
@@ -61,6 +62,7 @@ export const drawFull = (
   const padding = getPadding(canvas.width, canvas.height, paddingInitial);
 
   const bounds = getBounds(outer);
+
   const adjustedScaleX =
     (canvas.width - 2 * padding) / (bounds.longMax - bounds.longMin);
   const adjustedScaleY =
@@ -144,8 +146,28 @@ export const drawFull = (
     ctx.stroke();
   };
 
+  const drawGpsPositions = (positions) => {
+    Object.values(positions).forEach((devicePositions) => {
+      devicePositions.forEach((pos) => {
+        const x = (pos.long - bounds.longMin) * adjustedScaleX + padding;
+        const y =
+          canvas.height -
+          ((pos.lat - bounds.latMin) * adjustedScaleY + padding);
+
+        const { x: rotatedX, y: rotatedY } = rotatePoint(x, y);
+
+        ctx.beginPath();
+        ctx.arc(rotatedX, rotatedY, 5, 0, Math.PI * 2); // Raio de 5 para o círculo
+        ctx.fillStyle = "red"; // Cor das posições GPS
+        ctx.fill();
+        ctx.closePath();
+      });
+    });
+  };
+
   drawCurvedPath(inner, "white");
   drawCurvedPath(outer, "white");
+  drawGpsPositions(gpsPositions); // Desenha as posições GPS
 };
 
 export const drawTrack = (

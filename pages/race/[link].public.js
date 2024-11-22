@@ -2,7 +2,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import CanvasDisplay from "pages/lista/CanvasDisplay";
 import AsideRace from "./AsideRace"; // Ajuste o caminho conforme necessário
-import ModalKart from "pages/kart/ModalKart";
+import ModalKartSelector from "pages/kart/ModalKartSelector";
+import { useChangeMode } from "pages/kart/ModeSelector";
 
 const RacePage = () => {
   const router = useRouter();
@@ -11,6 +12,8 @@ const RacePage = () => {
   const [raceData, setRaceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar o modal
+  const [gps, setGps] = useState([]);
+  const { changeMode } = useChangeMode(); // hook change mode
 
   useEffect(() => {
     // Verifica se o parâmetro "link" foi capturado corretamente
@@ -67,6 +70,17 @@ const RacePage = () => {
     setIsModalOpen(false); // Fecha o modal
   };
 
+  const selectGps = (chip) => {
+    setGps((prevGps) => {
+      if (!prevGps.includes(chip)) {
+        return [...prevGps, chip];
+      }
+      return prevGps;
+    });
+    changeMode(20, chip);
+    closeModal();
+    console.log("GPS selecionado:", chip);
+  };
   return (
     <div className="flex max-h-screen h-screen">
       <AsideRace
@@ -77,9 +91,18 @@ const RacePage = () => {
         showNav={handleShowNav}
       />
       <main className="flex-1 ">
-        <CanvasDisplay track={raceData} width={"w-full"} height={"h-screen"} />
+        <CanvasDisplay
+          track={raceData}
+          width={"w-full"}
+          height={"h-screen"}
+          gps={gps}
+        />
         {isModalOpen && (
-          <ModalKart onClose={closeModal} /> // Renderiza o ModalKart se isModalOpen for true
+          <ModalKartSelector
+            isModalOpen={isModalOpen}
+            onClose={closeModal}
+            selectedGps={selectGps}
+          /> // Renderiza o ModalKart se isModalOpen for true
         )}
       </main>
     </div>
