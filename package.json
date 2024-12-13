@@ -12,13 +12,14 @@
     "lint:fix": "prettier --write .",
     "test": "jest --runInBand",
     "test:watch": "jest --watchAll --runInBand",
-    "migration:create": "node-pg-migrate create",
-    "migration:up": "node-pg-migrate --envPath .env.development up"
+    "migration:create": "node-pg-migrate --migrations-dir infra/migrations create",
+    "migration:up": "node-pg-migrate --migrations-dir infra/migrations --envPath .env.development up"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.5",
+    "dotenv-expand": "^12.0.1",
     "mqtt": "^5.10.1",
     "next": "^13.5.7",
     "node-pg-migrate": "^7.6.1",
