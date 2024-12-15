@@ -8,7 +8,7 @@ export default async function migrations(request, response) {
     const pendingMigrations = await migrationRunner({
       dbClient: dbClient,
       dryRun: true,
-      dir: join("infra", "migrations"),
+      dir: join(process.cwd(), "infra", "migrations"),
       direction: "up",
       verbose: true,
       migrationsTable: "pgmigrations",
@@ -20,7 +20,7 @@ export default async function migrations(request, response) {
     const migratedMigrations = await migrationRunner({
       dbClient: dbClient,
       dryRun: false,
-      dir: join("infra", "migrations"),
+      dir: join(process.cwd(), "infra", "migrations"),
       direction: "up",
       verbose: true,
       migrationsTable: "pgmigrations",
