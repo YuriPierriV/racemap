@@ -4,6 +4,7 @@ import database from "infra/database";
 
 export default async function migrations(request, response) {
   const dbClient = await database.getNewClient();
+  console.log("teste");
   if (request.method === "GET") {
     const pendingMigrations = await migrationRunner({
       dbClient: dbClient,
