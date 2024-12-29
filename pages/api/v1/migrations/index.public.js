@@ -3,7 +3,7 @@ import { join } from "node:path";
 import database from "infra/database";
 
 export default async function migrations(request, response) {
-  if (request.method !== "GET" || request.method !== "POST") {
+  if (request.method !== "GET" && request.method !== "POST") {
     return response.status(405).end();
   }
 
