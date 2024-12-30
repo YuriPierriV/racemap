@@ -35,13 +35,11 @@ export default async function handler(req, res) {
 
       const result = await database.query({ text: insertQuery, values });
       const raceId = result.rows[0].id;
-      return res
-        .status(201)
-        .json({
-          message: "Race saved successfully",
-          raceId,
-          link: generatedLink,
-        });
+      return res.status(201).json({
+        message: "Race saved successfully",
+        raceId,
+        link: generatedLink,
+      });
     } catch (err) {
       console.error("Error saving race data:", err.message);
       return res.status(500).json({ error: "Error saving race data" });

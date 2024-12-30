@@ -30,15 +30,18 @@
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
+
 - **Node.js**
 - **PostgreSQL** (via `pg`)
 
 ### Frontend
+
 - **Next.js**
 - **React**
 - **TailwindCSS**
 
 ### Desenvolvimento e Infraestrutura
+
 - **Docker** e **Docker Compose**
 - **Prettier** para linting
 - **Jest** para testes
@@ -48,6 +51,7 @@
 ## 🚀 Configuração do Ambiente de Desenvolvimento
 
 ### Pré-requisitos
+
 - Node.js e npm instalados.
 - Docker e Docker Compose configurados.
 - ESP8266 configurado com o firmware no diretório `arduino/kart`.
@@ -55,26 +59,36 @@
 ### Passo a Passo
 
 1. **Clonar o repositório:**
-```  
+
+```
    git clone https://github.com/YuriPierriV/racemap.git
-   cd racemap  
+   cd racemap
 ```
+
 2. **Instalar as dependências:**
+
 ```
-   npm install  
+   npm install
 ```
+
 3. **Iniciar os serviços Docker:**
+
 ```
-   npm run services:up  
+   npm run services:up
 ```
+
 4. **Iniciar o ambiente de desenvolvimento:**
+
 ```
-   npm run dev  
+   npm run dev
 ```
+
 5. **Testar o projeto:**
+
 ```
-   npm run test  
+   npm run test
 ```
+
 ---
 
 ## 📑 Scripts Disponíveis
@@ -92,9 +106,11 @@
 
 1. Faça um fork do projeto.
 2. Crie uma branch para sua feature ou correção:
+
 ```
-   git checkout -b minha-feature  
+   git checkout -b minha-feature
 ```
+
 3. Faça commit das suas alterações.
 4. Envie um pull request para análise.
 

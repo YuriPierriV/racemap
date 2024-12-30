@@ -1,6 +1,6 @@
 import database from "infra/database.js";
-import { connectUrl, options } from 'infra/mqttConfig.js'; // Ajuste o caminho conforme necessário
-import mqtt from 'mqtt';
+import { connectUrl, options } from "infra/mqttConfig.js"; // Ajuste o caminho conforme necessário
+import mqtt from "mqtt";
 
 async function status(request, response) {
   const updatedAt = new Date().toISOString(); // Hora atual com ISO Z
@@ -25,19 +25,19 @@ async function status(request, response) {
   const mqttClient = mqtt.connect(connectUrl, options);
   let mqttConnection = false;
 
-  mqttClient.on('connect', () => {
+  mqttClient.on("connect", () => {
     mqttConnection = true;
   });
 
-  mqttClient.on('error', (err) => {
+  mqttClient.on("error", (err) => {
     mqttConnection = false;
-    console.error('MQTT connection error:', err);
+    console.error("MQTT connection error:", err);
   });
 
   // Aguardar um tempo para garantir que a conexão foi estabelecida ou não
   await new Promise((resolve) => {
-    mqttClient.on('connect', () => resolve());
-    mqttClient.on('error', () => resolve());
+    mqttClient.on("connect", () => resolve());
+    mqttClient.on("error", () => resolve());
   });
 
   // Fechar a conexão MQTT ao final do processamento
