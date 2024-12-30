@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from "react";
 
 export default function DropdownActions({
   trackId, // Renomeado de traceId para trackId
@@ -6,12 +6,13 @@ export default function DropdownActions({
   setDropdownOpen,
   startEdit,
   deleteTrack, // Renomeado de deleteTrace para deleteTrack
-  viewTrack // Renomeado de viewTrace para viewTrack
+  viewTrack, // Renomeado de viewTrace para viewTrack
 }) {
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const toggleDropdown = (trackId) => { // Renomeado
+  const toggleDropdown = (trackId) => {
+    // Renomeado
     setDropdownOpen(dropdownOpen === trackId ? null : trackId);
   };
 
@@ -27,13 +28,14 @@ export default function DropdownActions({
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [dropdownRef, buttonRef, setDropdownOpen]);
 
-  const handleEdit = (trackId) => { // Renomeado
+  const handleEdit = (trackId) => {
+    // Renomeado
     viewTrack(trackId); // Carregar os dados do track selecionado
     startEdit(trackId); // Iniciar o modo de edição
     setDropdownOpen(null); // Fechar o dropdown
