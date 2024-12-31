@@ -1,9 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
-import { BASE_URL } from "pages/utils/config";
-import TraceTable from "pages/lista/TrackTable";
-import CanvasDisplay from "pages/lista/CanvasDisplay";
-import { drawFull } from "pages/utils/canvasUtils";
-import TracesCard from "./TrackCard";
+import React from "react";
 
 export default function StartRace() {
   return (
