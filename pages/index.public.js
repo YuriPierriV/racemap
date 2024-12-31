@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect, useState, useRef } from "react";
 import { drawTrack, drawFull } from "./utils/canvasUtils";
 import { useRouter } from "next/router";

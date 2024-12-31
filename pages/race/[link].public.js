@@ -62,7 +62,7 @@ const RacePage = () => {
     console.log("Editar Traçado");
   };
 
-  const handleShowNav = (isOpen) => {
+  const handleShowNav = () => {
     // Lógica para abrir ou fechar a nav
   };
 

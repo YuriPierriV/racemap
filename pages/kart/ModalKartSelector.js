@@ -1,6 +1,5 @@
 // components/ModalRace.js
 import Modal from "pages/components/Modal";
-import GpsSelector from "pages/kart/GpsSelector";
 import GpsListSelector from "./GpsListSelector";
 
 function ModalKartSelector({ isModalOpen, onClose, selectedGps }) {

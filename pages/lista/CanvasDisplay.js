@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { drawFull } from "pages/utils/canvasUtils";
-import useMqttPublish from "pages/mqtt/useMqttPublish";
 import useMqttSubscribe from "pages/mqtt/useMqttSubscribe";
 import useMqttMessages from "pages/mqtt/useMqttMessages";
 
 export default function CanvasDisplay({ track, width, height, gps = [] }) {
   const canvasRef = React.createRef(); // Adiciona a referência de canvasRef
-  const [messages, setMessages] = useState(["teste"]); //historico das mensagens do gps
+  const [, setMessages] = useState(["teste"]); //historico das mensagens do gps
   const [positions, setPositions] = useState({});
 
   useMqttMessages((topic, message) => {
@@ -67,7 +66,7 @@ export default function CanvasDisplay({ track, width, height, gps = [] }) {
 
     // Remove o listener ao desmontar o componente
     return () => window.removeEventListener("resize", handleResize);
-  }, [track]);
+  }, [canvasRef, track]);
 
   useEffect(() => {
     if (track) {
@@ -81,7 +80,7 @@ export default function CanvasDisplay({ track, width, height, gps = [] }) {
         positions,
       );
     }
-  }, [track, positions]);
+  }, [track, positions, canvasRef]);
 
   return (
     <canvas

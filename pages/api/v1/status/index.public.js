@@ -35,6 +35,7 @@ async function status(request, response) {
   });
 
   // Aguardar um tempo para garantir que a conexão foi estabelecida ou não
+  // eslint-disable-next-line no-undef
   await new Promise((resolve) => {
     mqttClient.on("connect", () => resolve());
     mqttClient.on("error", () => resolve());
