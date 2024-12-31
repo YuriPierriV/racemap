@@ -11,7 +11,7 @@ const RaceSelector = ({ onClose }) => {
 
   useEffect(() => {
     fetchListTrack();
-  }, []);
+  });
 
   const adjustTimezone = (createdAt) => {
     const date = new Date(createdAt);

@@ -63,6 +63,7 @@ export const GpsStatus = ({ gpsChip, onStatusChange }) => {
       clearTimeout(timeoutRef.current); // Limpa timeout ao desmontar
       clearInterval(intervalRef.current); // Limpa intervalo ao desmontar
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
 
   return (

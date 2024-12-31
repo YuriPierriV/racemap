@@ -2,10 +2,11 @@ import React, { useState } from "react";
 
 const AsideRace = ({
   onStartRace,
-  onManageDrivers,
+
   onManageKarts,
-  onEditTrack,
 }) => {
+  const [selectedMenu, setSelectedMenu] = useState(null);
+
   return (
     <aside className="md:block w-64 bg-gray-800 text-white flex flex-col h-screen">
       <div

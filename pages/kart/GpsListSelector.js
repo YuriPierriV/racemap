@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { GpsStatus } from "./StatusGps";
 import AddGps from "pages/gps/AddGps";
-import { translateMode } from "./ModeSelector";
 import { useChangeMode } from "./ModeSelector";
 
-export const GpsListSelector = ({ onClose, selectedGps }) => {
+export const GpsListSelector = ({ selectedGps }) => {
   const [gpsData, setGpsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar o modal
-  const [gpsStatus, setGpsStatus] = useState({});
+  const [, setGpsStatus] = useState({});
 
-  const { changeMode } = useChangeMode(); // hook change mode
-
-  const changeModeAtt = (mode, chip) => {
-    changeMode(mode, chip);
-    handleGpsStatusUpdate(chip, "Reconectando", "Confirmando");
-  };
+  useChangeMode(); // hook change mode
 
   // Função para buscar os dados
   const fetchGpsData = async () => {
@@ -31,7 +25,7 @@ export const GpsListSelector = ({ onClose, selectedGps }) => {
     }
   };
 
-  // Função para excluir um chip
+  /* Função para excluir um chip
   const deleteChip = async (chipId) => {
     try {
       const response = await fetch("/api/v1/chips", {
@@ -56,7 +50,7 @@ export const GpsListSelector = ({ onClose, selectedGps }) => {
       console.error("Erro ao excluir o chip:", error);
     }
   };
-
+  */
   useEffect(() => {
     fetchGpsData();
   }, []);
@@ -65,10 +59,10 @@ export const GpsListSelector = ({ onClose, selectedGps }) => {
     fetchGpsData();
     setIsModalOpen(false); // Fecha o modal
   };
-
+  /*
   const configKart = () => {
     setIsModalOpen(true); // Abre o modal ao gerenciar karts
-  };
+  };*/
 
   const handleGpsStatusUpdate = (chipId, status, mode) => {
     setGpsStatus((prev) => ({

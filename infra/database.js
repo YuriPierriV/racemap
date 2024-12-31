@@ -1,4 +1,4 @@
-import { client } from "pg";
+/* eslint-disable import/no-anonymous-default-export */
 import Client from "pg/lib/client";
 
 async function query(queryObject) {

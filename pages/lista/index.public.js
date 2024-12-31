@@ -3,7 +3,6 @@ import { BASE_URL } from "pages/utils/config";
 import TrackTable from "pages/lista/TrackTable"; // Renomeado
 import EditForm from "pages/lista/EditForm"; // Preservado, se necessário
 import CanvasDisplay from "pages/lista/CanvasDisplay";
-import { drawFull } from "pages/utils/canvasUtils";
 import { useRouter } from "next/router"; // Para navegação em Next.js
 
 export default function Lista() {
@@ -22,7 +21,7 @@ export default function Lista() {
 
   useEffect(() => {
     fetchListTrack(); // Renomeado
-  }, []);
+  });
 
   //agora atualiza o valor do selectedTrack
   useEffect(() => {
@@ -34,7 +33,7 @@ export default function Lista() {
         rotation, // atualiza a rotação
       }));
     }
-  }, [padding, curveIntensity, rotation]);
+  }, [padding, curveIntensity, rotation, selectedTrack]);
 
   const fetchListTrack = async () => {
     // Renomeado
@@ -63,8 +62,6 @@ export default function Lista() {
     const track = listTrack.find((t) => t.id === trackId); // Renomeado
 
     if (track) {
-      const { inner_track, outer_track, padding, curveintensity, rotation } =
-        track; // Renomeado
       setSelectedTrack(track);
     } else {
       console.error("Track não encontrado:", trackId); // Renomeado

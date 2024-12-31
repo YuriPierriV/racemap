@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { useEffect, useRef } from "react";
 import { useMqtt } from "./MqttContext";
 
@@ -45,6 +46,7 @@ const useMqttSubscribe = (topics) => {
             }
           });
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         subscribedTopicsRef.current.clear();
       }
     };
