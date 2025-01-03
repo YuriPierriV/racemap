@@ -189,7 +189,7 @@ export const drawTrack = (
   if (ctxOuter) {
     try {
       ctx.putImageData(ctxOuter.current, 0, 0); // Restore the outer's saved state
-    } catch (error) {
+    } catch {
       return "get ctx";
     }
   } else {
