@@ -12,7 +12,7 @@ async function query(queryObject) {
     console.error(error);
     throw error;
   } finally {
-    await client.end(); //obriga a finalizar o client
+    await client?.end(); //obriga a finalizar o client
   }
 }
 
