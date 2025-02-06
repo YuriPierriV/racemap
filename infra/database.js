@@ -1,5 +1,6 @@
 /* eslint-disable import/no-anonymous-default-export */
 import Client from "pg/lib/client";
+import { ServiceError } from "./errors/errors";
 
 async function query(queryObject) {
   let client;
@@ -9,8 +10,11 @@ async function query(queryObject) {
     const result = await client.query(queryObject);
     return result;
   } catch (error) {
-    console.error(error);
-    throw error;
+    const ServiceErrorObject = new ServiceError({
+      message: "Erro na conexão com o Banco de dados ou na Query",
+      cause: error
+    })
+    throw ServiceErrorObject;
   } finally {
     await client?.end(); //obriga a finalizar o client
   }
