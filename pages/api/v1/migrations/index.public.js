@@ -1,19 +1,16 @@
 import migrationRunner from "node-pg-migrate";
 import { join } from "node:path";
 import database from "infra/database";
-import { createRouter } from "next-connect"
+import { createRouter } from "next-connect";
 import controller from "infra/controller";
 
 const router = createRouter();
 
-router.get(getHandler)
+router.get(getHandler);
 
-router.post(postHandler)
+router.post(postHandler);
 
 export default router.handler(controller.errorHandlers);
-
-
-
 
 async function getHandler(request, response) {
   let dbClient;
@@ -29,12 +26,9 @@ async function getHandler(request, response) {
     });
 
     return response.status(200).json(pendingMigrations);
-  }
-  finally {
+  } finally {
     await dbClient.end();
   }
-
-
 }
 
 async function postHandler(request, response) {
@@ -52,16 +46,12 @@ async function postHandler(request, response) {
       migrationsTable: "pgmigrations",
     });
 
-
     if (migratedMigrations.length > 0) {
       return response.status(201).json(migratedMigrations);
     }
 
     return response.status(200).json(migratedMigrations);
-  }
-  finally {
+  } finally {
     await dbClient.end();
   }
-
-
 }

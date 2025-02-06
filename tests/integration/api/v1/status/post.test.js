@@ -7,8 +7,8 @@ beforeAll(async () => {
 describe("POST /api/v1/status", () => {
   describe("Usuário Anônimo", () => {
     test("Verificando status", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/status",{
-        method: "POST"
+      const response = await fetch("http://localhost:3000/api/v1/status", {
+        method: "POST",
       });
       expect(response.status).toBe(405);
 
@@ -18,10 +18,10 @@ describe("POST /api/v1/status", () => {
       expect(responseBody).toEqual({
         name: "MethodNotAllowedError",
         message: "Método não permitido para este endpoint.",
-        action: "Verifique se o método HTTP utilizado é válido para este endpoint.",
-        statusCode: 405
-      })
-      
+        action:
+          "Verifique se o método HTTP utilizado é válido para este endpoint.",
+        statusCode: 405,
+      });
     });
   });
 });

@@ -1,22 +1,16 @@
 import database from "infra/database.js";
-import { createRouter } from "next-connect"
+import { createRouter } from "next-connect";
 import { connectUrl, options } from "infra/mqttConfig.js"; // Ajuste o caminho conforme necessário
 import mqtt from "mqtt";
 import controller from "infra/controller";
 
-
 const router = createRouter();
 
-router.get(getHandler)
+router.get(getHandler);
 
 export default router.handler(controller.errorHandlers);
 
-
-
-
-
 async function getHandler(request, response) {
-
   const updatedAt = new Date().toISOString(); // Hora atual com ISO Z
 
   // Consulta para obter a versão do banco de dados
@@ -71,6 +65,4 @@ async function getHandler(request, response) {
       },
     },
   });
-
 }
-
