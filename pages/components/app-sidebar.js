@@ -1,6 +1,6 @@
 import { Home, Settings, ChevronUp, Map, Plus, ChevronRight, Users, Satellite, CalendarDays, BarChart } from "lucide-react"
 
-import { SidebarGroupAction, SidebarInset, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarGroupAction, SidebarInset, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 
 
 import React from "react"
@@ -89,12 +89,15 @@ export const items_pages = [
     },
 ];
 
+
+
 export function AppSidebar() {
+    const { open, toggleSidebar } = useSidebar();
     return (
         <Sidebar collapsible="icon" variant='floating'>
 
 
-            <SidebarHeader>
+            <SidebarHeader className='items-center justify-center'>
                 <h1>Logo</h1>
 
             </SidebarHeader>
@@ -111,7 +114,12 @@ export function AppSidebar() {
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuItem>
                                             <SidebarMenuButton asChild>
-                                                <a href={item.url} className="flex items-center gap-2 w-full">
+                                                <a
+                                                    href={item.url}
+                                                    className="flex items-center gap-2 w-full"
+                                                    onClick={!open ? toggleSidebar : undefined}
+                                                >
+
                                                     <item.icon className="w-5 h-5" />
                                                     <span>{item.title}</span>
                                                     {item.submenu && (
