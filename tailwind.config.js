@@ -20,7 +20,6 @@ module.exports = {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				card: {
-					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				popover: {
@@ -71,9 +70,13 @@ module.exports = {
 			backgroundImage: {
 				'sidebar': 'var(--sidebar-background)', // Usa a variável CSS
 				'solid': 'var(--background-solid)', // Usa a variável CSS
+				'card': 'var(--background-card)', // Usa a variável CSS
 			},
 			boxShadow: {
 				DEFAULT: 'var(--box-shadow)', // Define o tom laranja diretamente
+			},
+			fontFamily: {
+				custom: ['revolt'],
 			},
 		}
 	},

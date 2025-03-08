@@ -20,6 +20,7 @@ import {
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible"
+import Image from "next/image"
 
 
 // Menu items.
@@ -33,7 +34,7 @@ export const items_pages = [
         title: "Pilotos",
         icon: Users,
         submenu: [
-            { title: "Lista de Pilotos", url: "#" },
+            { title: "Lista de Pilotos", url: "/pilotos/lista-de-pilotos" },
             { title: "Estatísticas", url: "#" },
             { title: "Comparação de Pilotos", url: "#" },
         ],
@@ -43,17 +44,17 @@ export const items_pages = [
         url: "#",
         icon: Map,
         submenu: [
-            { title: "Mapa de Circuitos", url: "#" },
+            { title: "Mapa de Circuitos", url: "/tracados/mapa-de-circuitos" },
             { title: "Criar Novo Traçado", url: "#" },
             { title: "Análise de Traçados", url: "#" },
         ],
     },
     {
-        title: "GPS & Dispositivos",
+        title: "Dispositivos",
         url: "#",
         icon: Satellite,
         submenu: [
-            { title: "Lista de Dispositivos", url: "#" },
+            { title: "Lista de Dispositivos", url: "/dispositivos/lista-de-dispositivos" },
             { title: "Gerenciar Dispositivos", url: "#" },
         ],
     },
@@ -62,7 +63,7 @@ export const items_pages = [
         url: "#",
         icon: CalendarDays,
         submenu: [
-            { title: "Próximas Corridas", url: "#" },
+            { title: "Próximas Corridas", url: "/calendario/proximas-corridas" },
             { title: "Histórico de Corridas", url: "#" },
             { title: "Criar Novo Evento", url: "#" },
         ],
@@ -91,16 +92,33 @@ export const items_pages = [
 
 
 
+
+
 export function AppSidebar() {
     const { open, toggleSidebar } = useSidebar();
     return (
         <Sidebar collapsible="icon" variant='floating'>
 
 
-            <SidebarHeader className='items-center justify-center'>
-                <h1>Logo</h1>
-
+            <SidebarHeader className="items-center justify-center">
+                {open ? (
+                    <Image
+                        src="/logo.png"
+                        width={500}
+                        height={100} // Ajustei para um tamanho mais visível
+                        alt="Logo racemap"
+                        className="p-5"
+                    />
+                ) : (
+                    <Image
+                        src="/icon_logo.png"
+                        width={500}
+                        height={100} // Ajuste se necessário
+                        alt="Logo racemap"
+                    />
+                )}
             </SidebarHeader>
+
 
 
 
@@ -196,7 +214,7 @@ export function AppSidebar() {
     )
 }
 
-export function Layout({ children, defaultOpen }) {
+export function LayoutAside({ children, defaultOpen }) {
 
     return (
         <SidebarProvider defaultOpen={defaultOpen}>

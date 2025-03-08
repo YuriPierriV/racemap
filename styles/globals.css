@@ -8,6 +8,57 @@
   }
 }
 
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/ActayWide-Bold.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/ActayWide-BoldItalic.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/Actay-Regular.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/Actay-RegularItalic.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/ActayCondensed-Thin.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'revolt';
+  src: url('/fonts/ActayCondensed-ThinItalic.otf') format('opentype'),
+       url('/fonts/REVOLT.ttf') format('truetype');
+  font-weight: 200;
+  font-style: italic;
+}
+
+
+
+
 @layer base {
   :root {
     --background: 0 0% 85%;
@@ -37,8 +88,11 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
     --box-shadow: 6px -6px 19px #cccccc,  -6px 6px 19px #a6a6a6;
-    
+
+    --background-card: linear-gradient(145deg, #ffffff, #f2f2f2);;
+
     /* Sidebar */
+    
     --sidebar-background: linear-gradient(45deg, #e6e6e6, #ffffff);
     --sidebar-foreground: 0 0% 0%;
     --sidebar-primary: 29 97% 54%;
@@ -50,9 +104,9 @@
   }
 
   .dark {
-    --background: 0 0% 15%;
+    --background: 0 0% 10%;
     --foreground: 0 0% 100%;
-    --background-solid: #1a1a1a;
+    --background-solid: linear-gradient( #0d0d0d);
     --card: 0 0% 14%;
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 14%;
@@ -76,9 +130,11 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --box-shadow: 6px -6px 19px #161616,  -6px 6px 19px #1e1e1e;
+
+    --background-card: linear-gradient( #0d0d0d);
     
     /* Sidebar */
-    --sidebar-background: #1a1a1a;
+    --sidebar-background: linear-gradient( #0d0d0d);
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 29 97% 54%;
     --sidebar-primary-foreground: 0 0% 0%;
@@ -96,6 +152,6 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-custom ;
   }
 }
