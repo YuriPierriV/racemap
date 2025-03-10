@@ -177,6 +177,7 @@ bool connectToSavedNetworks() {
         if (digitalRead(BUTTON_PIN) == LOW) {
           unsigned long pressStart = millis();
           while (digitalRead(BUTTON_PIN) == LOW) {
+            yield();
             if (millis() - pressStart >= BUTTON_HOLD_TIME) {  // Botão pressionado por tempo suficiente
               Serial.println("\nBotão pressionado. Interrompendo tentativa de conexão e iniciando modo AP.");
               startAPMode();

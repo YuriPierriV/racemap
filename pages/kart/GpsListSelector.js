@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { GpsStatus } from "./StatusGps";
+import { GpsStatus } from "../comunication/StatusGps";
 import AddGps from "pages/gps/AddGps";
-import { useChangeMode } from "./ModeSelector";
+import { useChangeMode } from "../comunication/ModeSelector";
 
 export const GpsListSelector = ({ selectedGps }) => {
   const [gpsData, setGpsData] = useState([]);

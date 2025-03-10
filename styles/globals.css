@@ -2,26 +2,157 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/ActayWide-Bold.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/ActayWide-BoldItalic.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/Actay-Regular.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/Actay-RegularItalic.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/ActayCondensed-Thin.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "revolt";
+  src:
+    url("/fonts/ActayCondensed-ThinItalic.otf") format("opentype"),
+    url("/fonts/REVOLT.ttf") format("truetype");
+  font-weight: 200;
+  font-style: italic;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 85%;
+    --foreground: 0 0% 0%;
+    --background-solid: linear-gradient(#ffffff);
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 29 97% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 38 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 38 100% 50%;
+    --input: 29 97% 40%;
+    --ring: 29 97% 54%;
+    --chart-1: 29 97% 54%;
+    --chart-2: 38 100% 50%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --box-shadow: 6px -6px 19px #cccccc, -6px 6px 19px #a6a6a6;
+
+    --background-card: linear-gradient(145deg, #ffffff, #f2f2f2);
+
+    /* Sidebar */
+
+    --sidebar-background: linear-gradient(45deg, #e6e6e6, #ffffff);
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 29 97% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 100% 50%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 38 100% 50%;
+    --sidebar-ring: 38 100% 50%;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
+    --background-solid: linear-gradient(#0d0d0d);
+    --card: 0 0% 14%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 14%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 29 97% 54%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 38 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 38 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 29 97% 54%;
+    --input: 0 0% 14%;
+    --ring: 38 100% 50%;
+    --chart-1: 29 97% 54%;
+    --chart-2: 38 100% 50%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --box-shadow: 6px -6px 19px #161616, -6px 6px 19px #1e1e1e;
+
+    --background-card: linear-gradient(#0d0d0d);
+
+    /* Sidebar */
+    --sidebar-background: linear-gradient(#0d0d0d);
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 29 97% 54%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 38 100% 50%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 29 97% 54%;
+    --sidebar-ring: 38 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-custom;
   }
 }

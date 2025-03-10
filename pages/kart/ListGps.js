@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { GpsStatus } from "./StatusGps";
+import { GpsStatus } from "../comunication/StatusGps";
 import AddGps from "pages/gps/AddGps";
-import { translateMode } from "./ModeSelector";
-import { useChangeMode } from "./ModeSelector";
+import { translateMode } from "../comunication/ModeSelector";
+import { useChangeMode } from "../comunication/ModeSelector";
 
 export const GpsList = () => {
   const [gpsData, setGpsData] = useState([]);

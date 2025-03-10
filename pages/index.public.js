@@ -16,7 +16,7 @@ import useMqttSubscribe from "./mqtt/useMqttSubscribe";
 import useMqttMessages from "./mqtt/useMqttMessages";
 
 import GpsList from "./kart/ListGps";
-import { useChangeMode } from "./kart/ModeSelector";
+import { useChangeMode } from "./comunication/ModeSelector";
 
 const MqttPage = () => {
   const [loading, setLoading] = useState(true);

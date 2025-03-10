@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import CanvasDisplay from "pages/lista/CanvasDisplay";
 import AsideRace from "./AsideRace"; // Ajuste o caminho conforme necessário
 import ModalKartSelector from "pages/kart/ModalKartSelector";
-import { useChangeMode } from "pages/kart/ModeSelector";
+import { useChangeMode } from "pages/comunication/ModeSelector";
 
 const RacePage = () => {
   const router = useRouter();
