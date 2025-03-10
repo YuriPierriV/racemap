@@ -1,7 +1,7 @@
 import {
   InternalServerError,
   MethodNotAllowedError,
-  ValidationError
+  ValidationError,
 } from "infra/errors/errors";
 
 function onNoMatchHandler(req, res) {
@@ -10,8 +10,8 @@ function onNoMatchHandler(req, res) {
 }
 
 function onErrorHandler(error, req, res) {
-  if(error instanceof ValidationError){
-    return res.status(error.statusCode).json(error)
+  if (error instanceof ValidationError) {
+    return res.status(error.statusCode).json(error);
   }
 
   const publicErrorObject = new InternalServerError({

@@ -6,7 +6,7 @@ import database from "infra/database";
 const defaultMigrationOptions = {
   dir: join(process.cwd(), "infra", "migrations"),
   direction: "up",
-  log : () => {},
+  log: () => {},
   migrationsTable: "pgmigrations",
 };
 
