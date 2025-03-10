@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import LayoutMainPainel from "pages/components/main-painel";
 
-export default function Home({ defaultOpen }) {
+export default function Home() {
   return (
     <LayoutMainPainel>
       <Card>

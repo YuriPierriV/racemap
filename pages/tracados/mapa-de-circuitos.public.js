@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import LayoutMainPainel from "pages/components/main-painel";
 
-export default function MapaDeCircuitos({ defaultOpen }) {
+export default function MapaDeCircuitos() {
   return (
     <LayoutMainPainel>
       <Card>

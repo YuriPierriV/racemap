@@ -1,17 +1,14 @@
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ProfileForm } from "./_form";
 
-export default function AddNewDevice({}) {
+export default function AddNewDevice() {
   return (
     <AlertDialog>
       <AlertDialogTrigger>Open</AlertDialogTrigger>

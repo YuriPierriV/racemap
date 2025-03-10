@@ -14,8 +14,7 @@ import { useGpsStatus } from "pages/comunication/StatusGps";
 
 export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
   const [status, setStatus] = useState("idle"); // idle, verifying, sending, waiting, success, failed
-  const { gpsStatus, lastCheckTime, mode, isConnected, checkGpsStatus } =
-    useGpsStatus(deviceId);
+  const { gpsStatus, checkGpsStatus } = useGpsStatus(deviceId);
 
   useEffect(() => {
     if (status === "verifying") {

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import LayoutMainPainel from "pages/components/main-painel";
 
-export default function Pilotos({ defaultOpen }) {
+export default function Pilotos() {
   return (
     <LayoutMainPainel>
       <Card>

@@ -1,4 +1,3 @@
-import { Layout } from "pages/components/app-sidebar";
 import BreadcrumbDinamic from "./Breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import LayoutMainPainel from "pages/components/main-painel";
 
-export default function Tracados({ defaultOpen }) {
+export default function Tracados() {
   return (
     <LayoutMainPainel>
       <Card>
