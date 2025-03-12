@@ -135,8 +135,8 @@ export function AppSidebar() {
         ) : (
           <Image
             src="/icon_logo.png"
-            width={500}
-            height={100} // Ajuste se necessário
+            width={50}
+            height={50} // Ajuste se necessário
             alt="Logo racemap"
           />
         )}
