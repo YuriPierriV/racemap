@@ -97,7 +97,7 @@ export function ProfileForm() {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction type="submit" disabled={!formState.isValid}>
-            Continuar
+            Adicionar
           </AlertDialogAction>
         </AlertDialogFooter>
       </form>
