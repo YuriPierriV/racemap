@@ -61,11 +61,11 @@ const char* mqtt_username = "kartserver";
 const char* mqtt_password = "Kartserver123";
 
 // Comandos UBX para taxa de atualização do GPS
-unsigned char setRateTo20Hz[] = {0xB5, 0x62, 0x06, 0x08, 0x06, 0x00,  0x32, 0x00,  0x01, 0x00,  0x01, 0x00,  0x48, 0xE6};
+unsigned char setRateTo20Hz[] = { 0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x32, 0x00, 0x01, 0x00, 0x01, 0x00, 0x48, 0xE6 };
 unsigned char setRateTo10Hz[] = { 0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x64, 0x00, 0x01, 0x00, 0x01, 0x00, 0x7A, 0x12 };
 unsigned char setRateTo1Hz[] = { 0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xE8, 0x03, 0x01, 0x00, 0x01, 0x00, 0x01, 0x39 };
 unsigned long lastMQTTCheck = 0;
-unsigned long mqttInterval = 1000; // Intervalo para processar MQTT (em milissegundos)
+unsigned long mqttInterval = 1000;  // Intervalo para processar MQTT (em milissegundos)
 
 
 // Salvar redes na EEPROM
@@ -552,12 +552,29 @@ void reconnect() {
 
 // Publicação de dados GPS
 void publishGPSData() {
-  DynamicJsonDocument doc(256);
-  doc["deviceId"] = clientId.c_str();
-  doc["lat"] = gps.location.lat();
-  doc["long"] = gps.location.lng();
+  DynamicJsonDocument doc(512);
 
-  char buffer[256];
+  // Status do GPS: Conectado se tiver pelo menos 1 satélite, caso contrário, Desconectado
+  bool gpsConnected = gps.satellites.value() > 0;
+
+  doc["deviceId"] = clientId.c_str();
+  doc["gpsConnected"] = gpsConnected;
+  doc["satellites"] = gps.satellites.value();
+  doc["lat"] = gps.location.isValid() ? gps.location.lat() : 0.0;
+  doc["long"] = gps.location.isValid() ? gps.location.lng() : 0.0;
+
+  // Data e hora
+  doc["date"] = gps.date.isValid()
+                  ? String(gps.date.day()) + "/" + String(gps.date.month()) + "/" + String(gps.date.year())
+                  : "Invalid";
+  doc["time"] = gps.time.isValid()
+                  ? String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second())
+                  : "Invalid";
+
+  // Velocidade e direção
+  doc["speedKmph"] = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
+
+  char buffer[512];
   serializeJson(doc, buffer);
 
   if (client.publish(mqtt_topic_write.c_str(), buffer)) {
@@ -566,6 +583,7 @@ void publishGPSData() {
     Serial.println("Erro ao enviar dados GPS.");
   }
 }
+
 
 // Função para enviar comandos UBX ao GPS
 void sendUBX(unsigned char* UBXmsg, int len) {
@@ -601,8 +619,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       modeKart = 20;                                  // Define o modo como 20
       sendUBX(setRateTo20Hz, sizeof(setRateTo20Hz));  // Configura a taxa do GPS para 20Hz
       Serial.println("Modo alterado para 20Hz.");
-    }else if (message == "0") {
-      modeKart = 0;                                  // Define o modo como 20
+    } else if (message == "0") {
+      modeKart = 0;                                 // Define o modo como 20
       sendUBX(setRateTo1Hz, sizeof(setRateTo1Hz));  // Configura a taxa do GPS para 20Hz
       Serial.println("Modo alterado para 1Hz e pausado.");
     } else {
@@ -677,35 +695,29 @@ void loop() {
   // Caso o Wi-Fi esteja conectado
 
   if (WiFi.status() == WL_CONNECTED) {
+    // Verifica e atualiza a conexão Wi-Fi
     if (!wifiConnected) {
       wifiConnected = true;
       Serial.println("Conexão Wi-Fi estabelecida. Iniciando envio de dados.");
     }
 
     // Reconexão ao broker MQTT caso necessário
-    if (!client.connected() && wifiConnected) {
+    if (wifiConnected && !client.connected()) {
       Serial.println("Tentando conectar ao MQTT...");
       reconnect();
     }
 
-    // Processa mensagens MQTT recebidas em intervalos definidos
-    if (millis() - lastMQTTCheck > mqttInterval) {
-      lastMQTTCheck = millis();
-      client.loop();
+    // Processa os dados do GPS ao receber novas informações
+    client.loop();
+    if((gps.location.isUpdated() || gps.satellites.isUpdated())  && modeKart != 0 && gps.satellites.isValid()){
+      publishGPSData();
     }
-
-    // Processa dados do GPS
+    
     while (Serial.available() > 0) {
-      char c = Serial.read();
-      gps.encode(c);
-
-      // Publica dados do GPS apenas se houver novas informações
-      if (gps.location.isUpdated() && modeKart != 0) {
-        if (millis() - lastMQTTCheck < mqttInterval) { // Intervalo mínimo para publicação
-          publishGPSData();
-        }
-      }
+      gps.encode(Serial.read());
     }
+
+
   } else {
     wifiConnected = false;
   }

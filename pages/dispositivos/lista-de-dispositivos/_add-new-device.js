@@ -8,10 +8,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ProfileForm } from "./_form";
 
-export default function AddNewDevice() {
+export default function AddNewDevice({ text, Button: CustomButton }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger>Open</AlertDialogTrigger>
+      <AlertDialogTrigger asChild>
+        {CustomButton ? (
+          <CustomButton>{text}</CustomButton> // Renderiza o botão customizado
+        ) : (
+          <button className="px-4 py-2 bg-blue-500 text-white rounded">
+            {text}
+          </button> // Renderiza um botão padrão caso não tenha sido passado um botão
+        )}
+      </AlertDialogTrigger>
+
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Novo Dispositivo</AlertDialogTitle>
@@ -20,7 +29,7 @@ export default function AddNewDevice() {
             monitorar sua localização e dados.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <ProfileForm></ProfileForm>
+        <ProfileForm />
       </AlertDialogContent>
     </AlertDialog>
   );
