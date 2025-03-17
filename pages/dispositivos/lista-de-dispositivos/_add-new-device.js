@@ -6,7 +6,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ProfileForm } from "./_form";
+import { DeviceForm } from "./_form";
 
 export default function AddNewDevice({ text, Button: CustomButton }) {
   return (
@@ -29,7 +29,7 @@ export default function AddNewDevice({ text, Button: CustomButton }) {
             monitorar sua localização e dados.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <ProfileForm />
+        <DeviceForm />
       </AlertDialogContent>
     </AlertDialog>
   );

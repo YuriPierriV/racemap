@@ -29,7 +29,7 @@ const formSchema = z.object({
     message: "A conexão deve ser confirmada.",
   }),
 });
-export function ProfileForm() {
+export function DeviceForm() {
   // Define o formulário corretamente
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -50,16 +50,34 @@ export function ProfileForm() {
     if (watch("checked") === true) {
       handleConnectionResult(false); // Define como false se o ID for alterado
     }
+    
   }, [watch("deviceId")]); // Dispara sempre que o deviceId mudar
 
   function handleConnectionResult(success) {
+    console.log(success)
     setValue("checked", success);
     trigger();
   }
 
   // Manipulador de envio do formulário
-  function onSubmit(values) {
-    console.log(values); // Faz algo com os valores do formulário
+  async function onSubmit(values) {
+    console.log(values)
+    const response = await fetch("/api/v1/devices", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ chip_id: values.deviceId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+    }
+
+    const newDevice = await response.json();
+
+    // Opcional: Resetar formulário após sucesso
+    form.reset();
   }
 
   return (
@@ -95,7 +113,7 @@ export function ProfileForm() {
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => close()}>Cancelar</AlertDialogCancel>
           <AlertDialogAction type="submit" disabled={!formState.isValid}>
             Adicionar
           </AlertDialogAction>

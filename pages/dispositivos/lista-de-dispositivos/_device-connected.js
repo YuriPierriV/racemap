@@ -13,25 +13,28 @@ import {
 import { useGpsStatus } from "pages/comunication/StatusGps";
 
 export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
-  const { comm, checkGpsStatus } = useGpsStatus(deviceId);
+  const { gpsStatus, handleCheckGpsStatus } = useGpsStatus(deviceId,true);
 
   useEffect(() => {
-    if (comm === "Conectado") {
+    if (gpsStatus == "Conectado") {
       onConnectionResult(true);
+    }else{
+      onConnectionResult(false);
     }
-  }, [comm]);
+    
+  }, [gpsStatus]);
 
   return (
     <Card className={cn("w-[380px]")}>
       <CardHeader>
-        <CardTitle>Conexão com Dispositivo</CardTitle>
+        <CardTitle>{gpsStatus}</CardTitle>
         <CardDescription>
           ID: {deviceId || "Nenhum dispositivo informado"}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {/* Resultado Final */}
-        {comm === "Conectado" ? (
+        {gpsStatus=== "Conectado" ? (
           <div className="flex flex-col items-center space-y-3">
             <CheckCircle className="text-green-500" size={75} />
             <p className="text-green-600 font-medium">
@@ -44,19 +47,19 @@ export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
 
             {/* Passo 2: Envio de Comunicação */}
             <div className="flex items-center space-x-3">
-              {comm === "Enviando" ? (
+              {gpsStatus === "Enviando" ? (
                 <Loader2 className="animate-spin text-blue-500" size={20} />
-              ) : comm === "Recebido" ||
-                comm === "Não recebido" ||
-                comm === "Conectado" ||
-                comm === "Enviado" ? (
+              ) : gpsStatus === "Recebido" ||
+                gpsStatus === "Não recebido" ||
+                gpsStatus === "Conectado" ||
+                gpsStatus === "Enviado" ? (
                 <Check className="text-green-500" size={20} />
               ) : (
                 <Send className="text-gray-400" size={20} />
               )}
               <p
                 className={
-                  comm === "Enviando" ? "text-blue-500" : "text-gray-500"
+                  gpsStatus === "Enviando" ? "text-blue-500" : "text-gray-500"
                 }
               >
                 Conexão com servidor
@@ -65,18 +68,18 @@ export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
 
             {/* Passo 3: Aguardando Resposta */}
             <div className="flex items-center space-x-3">
-              {comm === "Recebido" || comm === "Enviado" ? (
+              {gpsStatus === "Recebido" || gpsStatus === "Enviado" ? (
                 <Loader2 className="animate-spin text-blue-500" size={20} />
-              ) : comm === "Conectado" ? (
+              ) : gpsStatus === "Conectado" ? (
                 <Check className="text-green-500" size={20} />
-              ) : comm === "Não recebido" ? (
+              ) : gpsStatus === "Não recebido" ? (
                 <X className="text-red-500" size={20} />
               ) : (
                 <RefreshCw className="text-gray-400" size={20} />
               )}
               <p
                 className={
-                  comm === "Recebido" ? "text-blue-500" : "text-gray-500"
+                  gpsStatus === "Recebido" ? "text-blue-500" : "text-gray-500"
                 }
               >
                 Resposta do dispositivo
@@ -88,11 +91,11 @@ export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
 
       <CardFooter>
         {/* O botão desaparece se a conexão for bem-sucedida */}
-        {comm !== "Conectado" && (
-          <Button className="w-full" onClick={() => checkGpsStatus()}>
-            {comm === "Não Iniciada"
+        {gpsStatus !== "Conectado" && (
+          <Button className="w-full" onClick={() => handleCheckGpsStatus()}>
+            {gpsStatus === "Aguardando..."
               ? "Conectar"
-              : comm === "Não recebido"
+              : gpsStatus === "Desconectado"
                 ? "Tentar Novamente"
                 : "Conectando..."}
           </Button>

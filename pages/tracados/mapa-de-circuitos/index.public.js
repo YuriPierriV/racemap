@@ -23,18 +23,7 @@ export default function MapaDeCircuitos() {
           <p>MapaDeCircuitos Footer</p>
         </CardFooter>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista De Pilotos</CardTitle>
-          <CardDescription>Descrição da MapaDeCircuitos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>MapaDeCircuitos</p>
-        </CardContent>
-        <CardFooter>
-          <p>MapaDeCircuitos Footer</p>
-        </CardFooter>
-      </Card>
+      
     </LayoutMainPainel>
   );
 }

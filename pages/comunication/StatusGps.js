@@ -1,17 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import useMqttSubscribe from "pages/mqtt/useMqttSubscribe";
 import useMqttPublish from "pages/mqtt/useMqttPublish";
 import useMqttMessages from "pages/mqtt/useMqttMessages";
 
-export const useGpsStatus = (gpsChip, onStatusChange) => {
+export const useGpsStatus = (gpsChip,) => {
   const { publishMessage, isConnected } = useMqttPublish();
-
   const [gpsStatus, setGpsStatus] = useState("Aguardando...");
-  const [comm, setComm] = useState("Não Iniciada");
+  const [mode, setMode] = useState("Aguardando...");
   const [lastCheckTime, setLastCheckTime] = useState(null);
-  const [mode, setMode] = useState(null);
   const timeoutRef = useRef(null);
-
+  const intervalRef = useRef(null);
+  
   // Subscrição MQTT
   useMqttSubscribe([`webserver/${gpsChip}/sts`]);
 
@@ -19,56 +18,72 @@ export const useGpsStatus = (gpsChip, onStatusChange) => {
   useMqttMessages((topic, message) => {
     if (topic === `webserver/${gpsChip}/sts`) {
       const status = message.status || "Status desconhecido";
-      const receivedMode = message.mode;
-      const lastCheckTimeNow = new Date();
-      setComm("Recebido");
-      setTimeout(() => {
-        setGpsStatus(status);
-        setMode(receivedMode);
-        setComm("Conectado");
-        setLastCheckTime(lastCheckTimeNow);
-      }, 2000);
+      const mode = message.mode;
 
-      if (onStatusChange) {
-        onStatusChange(status, receivedMode, lastCheckTimeNow, comm);
-      }
-
+      setGpsStatus(status);
+      setMode(mode);
+      
+      setLastCheckTime(new Date());
       clearTimeout(timeoutRef.current); // Limpa timeout ao receber resposta
     }
   });
 
   // Enviar comando para verificar status do GPS
-  const checkGpsStatus = () => {
+  const handleCheckGpsStatus = () => {
     if (isConnected) {
+      publishMessage(
+        `kart/${gpsChip}/sts`,
+        JSON.stringify({ command: "status" }),
+      );
       setLastCheckTime(new Date());
-      setComm("Enviando");
-      setTimeout(() => {
-        publishMessage(
-          `kart/${gpsChip}/sts`,
-          JSON.stringify({ command: "status" }),
-        );
-        setComm("Enviado");
-      }, 2000);
-
-      if (onStatusChange) {
-        onStatusChange(gpsStatus, mode, lastCheckTime, comm);
-      }
 
       // Define timeout para marcar como desconectado se não houver resposta
       timeoutRef.current = setTimeout(() => {
         setGpsStatus("Desconectado");
-        setComm("Não recebido");
       }, 10000);
     }
   };
 
+  function changeMode (speed) {
+    setMode('Confirmando');
+    if (isConnected) {
+      publishMessage(`kart/${gpsChip}/mode`, String(speed));
+    } else {
+      alert("MQTT desconectado. Tentando reconectar...");
+    }
+
+  
+    return { changeMode };
+  };
+
+  // Realizar uma verificação inicial e configurar reconexão automática
+  useEffect(() => {
+    if (isConnected) {
+      handleCheckGpsStatus();
+    } 
+
+    // Configurar reconexão automática
+    intervalRef.current = setInterval(() => {
+      handleCheckGpsStatus();
+    }, 15000); // A cada 30 segundos
+
+    return () => {
+      clearTimeout(timeoutRef.current); // Limpa timeout ao desmontar
+      clearInterval(intervalRef.current); // Limpa intervalo ao desmontar
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]);
+
+
+
   // Retornar os valores para serem usados em outro componente
   return {
     gpsStatus,
-    comm,
     lastCheckTime,
     mode,
+
     isConnected,
-    checkGpsStatus,
+    handleCheckGpsStatus,
+    changeMode,
   };
 };
