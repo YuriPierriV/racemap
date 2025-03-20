@@ -12,13 +12,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogFooter,
-} from "@/components/ui/alert-dialog";
 import { DeviceConnectionPanel } from "./_device-connected";
 import { useEffect } from "react";
+import { SheetClose, SheetFooter } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const formSchema = z.object({
   deviceId: z
@@ -29,7 +26,7 @@ const formSchema = z.object({
     message: "A conexão deve ser confirmada.",
   }),
 });
-export function ProfileForm() {
+export function DeviceForm() {
   // Define o formulário corretamente
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -53,13 +50,27 @@ export function ProfileForm() {
   }, [watch("deviceId")]); // Dispara sempre que o deviceId mudar
 
   function handleConnectionResult(success) {
+    console.log(success);
     setValue("checked", success);
     trigger();
   }
 
   // Manipulador de envio do formulário
-  function onSubmit(values) {
-    console.log(values); // Faz algo com os valores do formulário
+  async function onSubmit(values) {
+    console.log(values);
+    const response = await fetch("/api/v1/devices", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ chip_id: values.deviceId }),
+    });
+
+    const newDevice = await response.json();
+
+    // Opcional: Resetar formulário após sucesso
+    form.reset();
+    return newDevice;
   }
 
   return (
@@ -93,13 +104,13 @@ export function ProfileForm() {
             </div>
           )}
         </div>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction type="submit" disabled={!formState.isValid}>
-            Adicionar
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button type="submit" disabled={!formState.isValid}>
+              Adicionar
+            </Button>
+          </SheetClose>
+        </SheetFooter>
       </form>
     </Form>
   );

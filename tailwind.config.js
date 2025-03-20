@@ -28,6 +28,9 @@ module.exports = {
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
+          500: "hsl(var(--primary-500))",
+          200: "hsl(29, 97%, 65%)", // Meio-termo
+          100: "hsl(29, 97%, 80%)", // Mais claro
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
