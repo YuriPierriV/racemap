@@ -7,7 +7,7 @@ export default function Custom404() {
         <h1 className="text-6xl font-bold">404</h1>
       </div>
       <h2 className="text-2xl text-gray-700">Página não encontrada</h2>
-      <a href="/" className="text-blue-600 hover:underline">
+      <a href="/home" className="text-blue-600 hover:underline">
         Retornar à tela inicial
       </a>
     </div>
