@@ -66,12 +66,11 @@ export function DeviceForm() {
       body: JSON.stringify({ chip_id: values.deviceId }),
     });
 
-
     const newDevice = await response.json();
-    
+
     // Opcional: Resetar formulário após sucesso
     form.reset();
-    return newDevice
+    return newDevice;
   }
 
   return (

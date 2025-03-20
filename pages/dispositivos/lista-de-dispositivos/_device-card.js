@@ -121,9 +121,7 @@ export function DropdownMenuMode({ changeMode }) {
 }
 
 export default function CardDevice({ device, filter }) {
-  const { gpsStatus, mode, changeMode } = useGpsStatus(
-    device.chip_id,
-  );
+  const { gpsStatus, mode, changeMode } = useGpsStatus(device.chip_id);
 
   if (filter == "conectados") {
     if (gpsStatus !== "Conectado") {

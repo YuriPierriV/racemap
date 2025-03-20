@@ -5,11 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  WifiLow,
-  WifiZero,
-  WifiHigh,
-} from "lucide-react";
+import { WifiLow, WifiZero, WifiHigh } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,53 +95,49 @@ export const WifiIcon = ({ level, className = "" }) => {
   }
 };
 
-const ConnectionState = forwardRef(
-  ({ deviceId, setDeviceStatus }, ref) => {
-    const { gpsStatus, handleCheckGpsStatus } = useGpsStatus(deviceId, true);
-    const [wifiLevel, setWifiLevel] = useState(0);
-    useImperativeHandle(ref, () => handleCheckGpsStatus);
-    useEffect(() => {
-      setDeviceStatus(gpsStatus);
-    }, [gpsStatus]);
+const ConnectionState = forwardRef(({ deviceId, setDeviceStatus }, ref) => {
+  const { gpsStatus, handleCheckGpsStatus } = useGpsStatus(deviceId, true);
+  const [wifiLevel, setWifiLevel] = useState(0);
+  useImperativeHandle(ref, () => handleCheckGpsStatus);
+  useEffect(() => {
+    setDeviceStatus(gpsStatus);
+  }, [gpsStatus]);
 
-    // Efeito para animação do WiFi quando aguardando
-    useEffect(() => {
-      let interval;
-      if (gpsStatus === "Aguardando...") {
-        interval = setInterval(() => {
-          setWifiLevel((prev) => (prev + 1) % 4); // Alterna entre 0,1,2,3
-        }, 100);
-      }
-      return () => clearInterval(interval);
-    }, [gpsStatus]);
+  // Efeito para animação do WiFi quando aguardando
+  useEffect(() => {
+    let interval;
+    if (gpsStatus === "Aguardando...") {
+      interval = setInterval(() => {
+        setWifiLevel((prev) => (prev + 1) % 4); // Alterna entre 0,1,2,3
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [gpsStatus]);
 
-    // Renderiza o ícone de WiFi com base no nível
+  // Renderiza o ícone de WiFi com base no nível
 
-    return (
-      <div className="flex flex-col items-center space-y-4">
-        {gpsStatus === "Conectado" ? (
-          <div className="flex flex-col items-center space-y-2">
-            <Wifi className="w-8 h-8 text-green-500" />
-            <p className="text-green-600 font-medium">Dispositivo conectado</p>
-          </div>
-        ) : gpsStatus === "Aguardando..." ? (
-          <div className="flex flex-col items-center space-y-2">
-            <WifiIcon level={wifiLevel} className={"w-8 h-8"} />
-            <p className="text-blue-500 font-medium">Tentando conectar...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center space-y-2">
-            <WifiOff className="w-8 h-8 text-red-500" />
-            <p className="text-red-600 font-medium">
-              Dispositivo não conectado
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  },
-);
+  return (
+    <div className="flex flex-col items-center space-y-4">
+      {gpsStatus === "Conectado" ? (
+        <div className="flex flex-col items-center space-y-2">
+          <Wifi className="w-8 h-8 text-green-500" />
+          <p className="text-green-600 font-medium">Dispositivo conectado</p>
+        </div>
+      ) : gpsStatus === "Aguardando..." ? (
+        <div className="flex flex-col items-center space-y-2">
+          <WifiIcon level={wifiLevel} className={"w-8 h-8"} />
+          <p className="text-blue-500 font-medium">Tentando conectar...</p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-2">
+          <WifiOff className="w-8 h-8 text-red-500" />
+          <p className="text-red-600 font-medium">Dispositivo não conectado</p>
+        </div>
+      )}
+    </div>
+  );
+});
 
-ConnectionState.displayName = 'ConnectionState';
+ConnectionState.displayName = "ConnectionState";
 
 export { ConnectionState };
