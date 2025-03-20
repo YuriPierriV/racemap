@@ -12,13 +12,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogFooter,
-} from "@/components/ui/alert-dialog";
 import { DeviceConnectionPanel } from "./_device-connected";
 import { useEffect } from "react";
+import { SheetClose, SheetFooter } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const formSchema = z.object({
   deviceId: z
@@ -50,18 +47,17 @@ export function DeviceForm() {
     if (watch("checked") === true) {
       handleConnectionResult(false); // Define como false se o ID for alterado
     }
-    
   }, [watch("deviceId")]); // Dispara sempre que o deviceId mudar
 
   function handleConnectionResult(success) {
-    console.log(success)
+    console.log(success);
     setValue("checked", success);
     trigger();
   }
 
   // Manipulador de envio do formulário
   async function onSubmit(values) {
-    console.log(values)
+    console.log(values);
     const response = await fetch("/api/v1/devices", {
       method: "POST",
       headers: {
@@ -70,14 +66,12 @@ export function DeviceForm() {
       body: JSON.stringify({ chip_id: values.deviceId }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-    }
 
     const newDevice = await response.json();
-
+    
     // Opcional: Resetar formulário após sucesso
     form.reset();
+    return newDevice
   }
 
   return (
@@ -111,13 +105,13 @@ export function DeviceForm() {
             </div>
           )}
         </div>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => close()}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction type="submit" disabled={!formState.isValid}>
-            Adicionar
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button type="submit" disabled={!formState.isValid}>
+              Adicionar
+            </Button>
+          </SheetClose>
+        </SheetFooter>
       </form>
     </Form>
   );

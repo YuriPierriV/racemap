@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
 import LayoutMainPainel from "pages/components/main-painel";
 import AddNewDevice from "./_add-new-device";
 import { Button } from "@/components/ui/button";
@@ -14,11 +12,8 @@ async function fetchAPI(key) {
 }
 
 export default function ListaDeDispositivos() {
-  const { data, error, isLoading } = useSWR("/api/v1/devices", fetchAPI,{
+  const { data, error, isLoading } = useSWR("/api/v1/devices", fetchAPI, {});
 
-  });
-
-  
   return (
     <LayoutMainPainel>
       <div className="flex justify-between">
@@ -43,7 +38,7 @@ export default function ListaDeDispositivos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {data.map((device) => (
-                <CardDevice device={device}></CardDevice>
+                <CardDevice device={device} key={device}></CardDevice>
               ))}
             </div>
           )}
@@ -59,7 +54,7 @@ export default function ListaDeDispositivos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {data.map((device) => (
-                <CardDevice device={device} filter={"conectados"}></CardDevice>
+                <CardDevice device={device} filter={"conectados"} key={device}></CardDevice>
               ))}
             </div>
           )}
@@ -75,7 +70,11 @@ export default function ListaDeDispositivos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {data.map((device) => (
-                <CardDevice device={device} filter={"desconectados"}></CardDevice>
+                <CardDevice
+                  device={device}
+                  filter={"desconectados"}
+                  key={device}
+                ></CardDevice>
               ))}
             </div>
           )}

@@ -23,7 +23,6 @@ export default function MapaDeCircuitos() {
           <p>MapaDeCircuitos Footer</p>
         </CardFooter>
       </Card>
-      
     </LayoutMainPainel>
   );
 }

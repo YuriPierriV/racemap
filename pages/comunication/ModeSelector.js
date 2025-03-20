@@ -1,5 +1,3 @@
-
-
 export const translateMode = (mode) => {
   switch (mode) {
     case 1:

@@ -1,5 +1,4 @@
 exports.up = (pgm) => {
-  
   pgm.createTable("devices", {
     id: {
       type: "uuid",

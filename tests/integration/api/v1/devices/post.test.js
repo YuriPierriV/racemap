@@ -67,8 +67,6 @@ describe("POST /api/v1/devices", () => {
         statusCode: 400,
       });
     });
-
-
   });
 });
 
@@ -83,12 +81,6 @@ describe("GET /api/v1/devices", () => {
       });
 
       expect(response.status).toBe(201);
-
-      
     });
-
-
-
-
   });
 });

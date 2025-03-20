@@ -16,7 +16,6 @@ async function postHandler(request, response) {
   return response.status(201).json(newDevice);
 }
 
-
 async function getHandler(request, response) {
   const { id } = request.query;
 
