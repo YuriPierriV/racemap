@@ -17,13 +17,6 @@ async function postHandler(request, response) {
 }
 
 async function getHandler(request, response) {
-  const { id } = request.query;
-
-  if (id) {
-    const foundDevice = await device.findOneById(id);
-    return response.status(201).json(foundDevice);
-  }
-
   const allDevices = await device.findAll();
-  return response.status(201).json(allDevices);
+  return response.status(200).json(allDevices);
 }
