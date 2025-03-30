@@ -48,6 +48,7 @@ import {
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
 import Image from "next/image";
+import { useTheme } from "next-themes";
 
 // Menu items.
 export const items_pages = [
@@ -121,14 +122,15 @@ export const items_pages = [
 
 export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
+  const { theme } = useTheme();
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader className="items-center justify-center">
         {open ? (
           <Image
-            src="/logo.png"
+            src={theme === "dark" ? "/logo_dark.png" : "/logo_white.png"}
             width={500}
-            height={100} // Ajustei para um tamanho mais visível
+            height={100}
             alt="Logo racemap"
             className="p-5"
           />
@@ -136,7 +138,7 @@ export function AppSidebar() {
           <Image
             src="/icon_logo.png"
             width={50}
-            height={50} // Ajuste se necessário
+            height={50}
             alt="Logo racemap"
           />
         )}
