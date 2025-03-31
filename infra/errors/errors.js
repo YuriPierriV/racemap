@@ -13,6 +13,7 @@ export class InternalServerError extends Error {
       name: this.name,
       message: this.message,
       action: this.action,
+      cause: this.cause,
       statusCode: this.statusCode,
     };
   }
@@ -33,6 +34,7 @@ export class ServiceError extends Error {
       name: this.name,
       message: this.message,
       action: this.action,
+      cause: this.cause,
       statusCode: this.statusCode,
     };
   }
