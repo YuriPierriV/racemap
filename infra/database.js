@@ -12,7 +12,13 @@ async function query(queryObject) {
   } catch (error) {
     const ServiceErrorObject = new ServiceError({
       message: "Erro na conexão com o Banco de dados ou na Query",
-      cause: error,
+      cause: {
+        host: process.env.POSTGRES_HOST,
+        port: process.env.POSTGRES_PORT,
+        user: process.env.POSTGRES_USER,
+        database: process.env.POSTGRES_DB,
+        ssl: !process.env.NODE_ENV === "development",
+      },
     });
     throw ServiceErrorObject;
   } finally {
