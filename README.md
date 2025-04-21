@@ -1,6 +1,6 @@
 # RaceMap 🏁
 
-*[README in English](README.en.md)*
+_[README in English](README.en.md)_
 
 [![Versão](https://img.shields.io/badge/versão-1.0.0-blue.svg)](https://github.com/YuriPierriV/racemap)
 [![Licença](https://img.shields.io/badge/licença-MIT-green.svg)](LICENSE)
@@ -15,6 +15,7 @@ Um sistema de mapeamento de corridas em tempo real que combina uma interface web
 ## Visão Geral
 
 RaceMap é uma solução completa de gerenciamento e rastreamento de corridas que permite:
+
 - Rastreamento GPS em tempo real dos veículos
 - Visualização e monitoramento ao vivo das corridas
 - Criação e gerenciamento de traçados
@@ -24,16 +25,19 @@ RaceMap é uma solução completa de gerenciamento e rastreamento de corridas qu
 ## Tecnologias
 
 ### Frontend
+
 - **Next.js 15** - Framework React para aplicações web
 - **React 19** - Biblioteca de componentes UI
 - **TailwindCSS** - Framework CSS utilitário
 
 ### Backend
+
 - **PostgreSQL** - Banco de dados principal para armazenamento de traçados, corridas e dados de usuários
 - **Node.js** - Ambiente de execução
 - **Docker** - Containerização para ambiente de desenvolvimento
 
 ### Dispositivos IoT
+
 - **ESP8266** - Microcontrolador com WiFi
 - **Módulo GPS** - Para rastreamento preciso de localização
 - **Protocolo MQTT** - Para transmissão de dados em tempo real
@@ -41,35 +45,41 @@ RaceMap é uma solução completa de gerenciamento e rastreamento de corridas qu
 ## Funcionalidades
 
 ### Rastreamento em Tempo Real
+
 - Transmissão de dados GPS via MQTT
 - Taxas de atualização configuráveis (1Hz, 10Hz, 20Hz)
 - Reconexão automática
 - Transmissão segura de dados
 
 ### Gerenciamento de Traçados
+
 - Criação e edição de traçados
 - Suporte para limites internos e externos da pista
 - Ajuste de rotação e preenchimento
 - Configuração de intensidade das curvas
 
 ### Gerenciamento de Pilotos
+
 - Perfis e estatísticas dos pilotos
 - Ferramentas de comparação de desempenho
 - Análise de dados históricos de corridas
 
 ### Gerenciamento de Dispositivos
+
 - Interface de configuração
 - Configuração automática de WiFi
 - Monitoramento de status em tempo real
 - Registro e gerenciamento de dispositivos
 
 ### Análise de Corridas
+
 - Rastreamento de posição em tempo real
 - Cálculos de tempo de volta
 - Análise de velocidade
 - Funcionalidade de replay da corrida
 
 ### Interface do Usuário
+
 - Design moderno e responsivo
 - Suporte a temas claro/escuro
 - Dashboard interativo
@@ -87,8 +97,6 @@ RaceMap é uma solução completa de gerenciamento e rastreamento de corridas qu
 
 ## Configuração do Ambiente de Desenvolvimento
 
-
-
 ### Pré-requisitos
 
 - Node.js e npm instalados
@@ -98,27 +106,32 @@ RaceMap é uma solução completa de gerenciamento e rastreamento de corridas qu
 ### Passos para Instalação
 
 1. **Clone o repositório:**
+
 ```bash
 git clone https://github.com/YuriPierriV/racemap.git
 cd racemap
 ```
 
 2. **Instale as dependências:**
+
 ```bash
 npm install
 ```
 
 3. **Inicie os serviços Docker:**
+
 ```bash
 npm run services:up
 ```
 
 4. **Inicie o ambiente de desenvolvimento:**
+
 ```bash
 npm run dev
 ```
 
 5. **Execute os testes:**
+
 ```bash
 npm run test
 ```
@@ -133,17 +146,20 @@ npm run test
 - Fonte de alimentação (bateria ou USB)
 
 #### Configuração de Conexões:
+
 - 🚧🚧 Trabalhando... 🚧🚧
 
 ### Configuração do Dispositivo
 
 1. **Instale as Dependências do Arduino IDE:**
+
    - Gerenciador de placas ESP8266
    - Biblioteca TinyGPS++
    - Biblioteca PubSubClient
    - Biblioteca ArduinoJson
 
 2. **Upload do Firmware:**
+
    - Abra `arduino/kart/kart.ino` no Arduino IDE
    - Selecione sua placa ESP8266
    - Configure as credenciais do broker MQTT
@@ -162,25 +178,30 @@ npm run test
 ## Scripts Disponíveis
 
 ### Desenvolvimento
+
 - **`npm run dev`**: Inicia o ambiente de desenvolvimento completo (serviços, migrações de banco de dados, servidor Next.js)
 - **`npm run services:up`**: Inicia os serviços Docker necessários (PostgreSQL, etc.)
 - **`npm run services:down`**: Para todos os serviços Docker
 - **`npm run services:wait:database`**: Aguarda o PostgreSQL estar pronto (usado por outros scripts)
 
 ### Banco de Dados
+
 - **`npm run migrations:up`**: Aplica todas as migrações pendentes
 - **`npm run migrations:create`**: Cria um novo arquivo de migração
 
 ### Qualidade de Código
+
 - **`npm run lint:prettier:check`**: Verifica a formatação do código sem fazer alterações
 - **`npm run lint:prettier:fix`**: Corrige automaticamente problemas de formatação
 - **`npm run lint:eslint:check`**: Executa o ESLint para verificar a qualidade do código
 
 ### Testes
+
 - **`npm run test`**: Executa todos os testes automatizados com serviços
 - **`npm run test:watch`**: Executa testes em modo watch para desenvolvimento
 
 ### Controle de Versão
+
 - **`npm run commit`**: Usa commitizen para mensagens de commit padronizadas
 - **`npm run prepare`**: Configura os hooks do git com husky (executado automaticamente após install)
 
@@ -188,17 +209,20 @@ npm run test
 
 1. Faça um fork do projeto
 2. Crie sua branch de feature:
+
 ```bash
 git checkout -b minha-nova-feature
 ```
 
 3. Prepare suas alterações e faça commit usando commitizen:
+
 ```bash
 git add .
 npm run commit  # Isso irá guiá-lo na criação de uma mensagem de commit padronizada
 ```
 
 4. Faça push para sua branch:
+
 ```bash
 git push origin minha-nova-feature
 ```
