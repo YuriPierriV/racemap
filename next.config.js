@@ -1,3 +1,3 @@
 module.exports = {
-  pageExtensions: ["public.js"],
+  pageExtensions: ["public.jsx", "public.js"],
 };
