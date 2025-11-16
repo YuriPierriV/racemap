@@ -121,15 +121,20 @@ export function DropdownMenuMode({ changeMode }) {
 }
 
 export default function CardDevice({ device, filter }) {
-  const { gpsStatus, mode, changeMode } = useGpsStatus(device.chip_id);
+  // Só tenta conectar ao GPS se o chip_id existir
+  const { gpsStatus, mode, changeMode } = useGpsStatus(device.chip_id || null);
+
+  // Se não tem chip_id, forçar status desconectado
+  const effectiveGpsStatus = device.chip_id ? gpsStatus : "Desconectado";
+  const effectiveMode = device.chip_id ? mode : null;
 
   if (filter == "conectados") {
-    if (gpsStatus !== "Conectado") {
+    if (effectiveGpsStatus !== "Conectado") {
       return;
     }
   }
   if (filter == "desconectados") {
-    if (gpsStatus == "Conectado" && gpsStatus !== "Aguardando...") {
+    if (effectiveGpsStatus == "Conectado" && effectiveGpsStatus !== "Aguardando...") {
       return;
     }
   }
@@ -138,24 +143,35 @@ export default function CardDevice({ device, filter }) {
       <CardHeader>
         <CardTitle>
           <div className="flex justify-between items-center">
-            {device.chip_id}
-            <DropdownMenuMode
-              deviceId={device.chip_id}
-              changeMode={changeMode}
-            ></DropdownMenuMode>
+            {device.chip_id || device.name || `Dispositivo #${device.id}`}
+            {device.chip_id && (
+              <DropdownMenuMode
+                deviceId={device.chip_id}
+                changeMode={changeMode}
+              ></DropdownMenuMode>
+            )}
           </div>
         </CardTitle>
         <CardDescription>
           <div className="flex items-center align-middle space-x-3">
             <p className="text-gray-500">Dispositivo GPS</p>
-            <DeviceStatus gpsStatus={gpsStatus} mode={mode} />
+            <DeviceStatus gpsStatus={effectiveGpsStatus} mode={effectiveMode} />
           </div>
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-600">
-          Detalhes do dispositivo podem ser adicionados aqui.
-        </p>
+        {!device.chip_id ? (
+          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              ⚠️ Este dispositivo não possui um <strong>chip_id</strong> configurado. 
+              Configure para habilitar conexão GPS.
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-600">
+            Chip ID: <strong>{device.chip_id}</strong>
+          </p>
+        )}
       </CardContent>
       <CardFooter>
         <p className="text-gray-500">

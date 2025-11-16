@@ -5,19 +5,21 @@ import useMqttMessages from "pages/mqtt/useMqttMessages";
 
 export const useGpsStatus = (gpsChip) => {
   const { publishMessage, isConnected } = useMqttPublish();
-  const [gpsStatus, setGpsStatus] = useState("Aguardando...");
-  const [mode, setMode] = useState("Aguardando...");
+  const [gpsStatus, setGpsStatus] = useState(gpsChip ? "Aguardando..." : "Desconectado");
+  const [mode, setMode] = useState(gpsChip ? "Aguardando..." : null);
   const [lastCheckTime, setLastCheckTime] = useState(null);
   const timeoutRef = useRef(null);
   const intervalRef = useRef(null);
-  const currentStatusRef = useRef("Aguardando..."); // Nova ref para acompanhar o status atual
-
+  const currentStatusRef = useRef(gpsChip ? "Aguardando..." : "Desconectado");
+  
   // Atualizar a ref quando o status mudar
   useEffect(() => {
     currentStatusRef.current = gpsStatus;
   }, [gpsStatus]);
 
-  useMqttSubscribe([`webserver/${gpsChip}/sts`]);
+  // Se não há chip_id, não inscrever no MQTT
+  const topicsToSubscribe = gpsChip ? [`webserver/${gpsChip}/sts`] : [];
+  useMqttSubscribe(topicsToSubscribe);
 
   // Gerenciar mensagens recebidas
   useMqttMessages((topic, message) => {
@@ -35,6 +37,11 @@ export const useGpsStatus = (gpsChip) => {
   });
 
   const handleCheckGpsStatus = () => {
+    // Não fazer nada se não tiver chip_id
+    if (!gpsChip) {
+      return;
+    }
+
     if (isConnected) {
       publishMessage(
         `kart/${gpsChip}/sts`,
@@ -60,6 +67,11 @@ export const useGpsStatus = (gpsChip) => {
   };
 
   function changeMode(speed) {
+    // Não fazer nada se não tiver chip_id
+    if (!gpsChip) {
+      return;
+    }
+
     setMode("Confirmando");
     if (isConnected) {
       publishMessage(`kart/${gpsChip}/mode`, String(speed));
@@ -72,21 +84,24 @@ export const useGpsStatus = (gpsChip) => {
 
   // Realizar uma verificação inicial e configurar reconexão automática
   useEffect(() => {
-    if (isConnected) {
+    // Só verificar se tiver chip_id
+    if (isConnected && gpsChip) {
       handleCheckGpsStatus();
     }
 
-    // Configurar reconexão automática
-    intervalRef.current = setInterval(() => {
-      handleCheckGpsStatus();
-    }, 15000); // A cada 30 segundos
+    // Configurar reconexão automática apenas se tiver chip_id
+    if (gpsChip) {
+      intervalRef.current = setInterval(() => {
+        handleCheckGpsStatus();
+      }, 15000); // A cada 15 segundos
+    }
 
     return () => {
       clearTimeout(timeoutRef.current); // Limpa timeout ao desmontar
       clearInterval(intervalRef.current); // Limpa intervalo ao desmontar
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]);
+  }, [isConnected, gpsChip]);
 
   // Retornar os valores para serem usados em outro componente
   return {
