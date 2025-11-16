@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import useSWR from "swr";
-import { useRouter } from "next/router";
 import { useGpsStatus } from "pages/comunication/StatusGps";
 import {
   Select,
@@ -14,14 +13,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Circle, Info, MapPin, Radio, Settings, ChevronLeft, ChevronRight, Plus, ExternalLink, Loader2, WifiOff, Wifi, X } from "lucide-react";
-import MapPositioning from "./components/MapPositioning";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CheckCircle2,
+  Circle,
+  Info,
+  MapPin,
+  Radio,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  ExternalLink,
+  Loader2,
+  WifiOff,
+  Wifi,
+  X,
+} from "lucide-react";
+import { useRouter } from "next/router";
 import TrackRecording from "./components/TrackRecording";
 import CircuitCard from "./components/CircuitCard";
 import CircuitDetailModal from "./components/CircuitDetailModal";
 import CircuitEditModal from "./components/CircuitEditModal";
-import MapPreview from "./components/MapPreview";
 import MapPreviewClean from "./components/MapPreviewClean";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -46,31 +65,42 @@ export default function Tracados() {
     location: "",
     length: "",
     device: "",
-    startLat: "",  // Ponto inicial do traçado
+    startLat: "", // Ponto inicial do traçado
     startLong: "", // Ponto inicial do traçado
     direction: "clockwise", // Direção do circuito
     trackingStatus: "ready",
-    points: [],    // Pontos capturados durante o rastreamento
-    trackBuffer: [] // Buffer para média dos pontos
+    points: [], // Pontos capturados durante o rastreamento
+    trackBuffer: [], // Buffer para média dos pontos
   });
 
-  const { data: devices, error: devicesError, isLoading: devicesLoading } = useSWR("/api/v1/devices", fetchAPI, {
-    refreshInterval: 5000
+  const {
+    data: devices,
+    error: devicesError,
+    isLoading: devicesLoading,
+  } = useSWR("/api/v1/devices", fetchAPI, {
+    refreshInterval: 5000,
   });
 
-  const { data: circuits, error: circuitsError, isLoading: circuitsLoading, mutate: mutateCircuits } = useSWR("/api/v1/circuits", fetchAPI, {
-    refreshInterval: 10000
+  const {
+    data: circuits,
+    error: circuitsError,
+    isLoading: circuitsLoading,
+    mutate: mutateCircuits,
+  } = useSWR("/api/v1/circuits", fetchAPI, {
+    refreshInterval: 10000,
   });
 
-  const selectedDevice = devices?.find(d => d.id === formData.device);
-  const { gpsStatus, handleCheckGpsStatus } = useGpsStatus(selectedDevice?.chip_id || null);
+  const selectedDevice = devices?.find((d) => d.id === formData.device);
+  const { gpsStatus, handleCheckGpsStatus } = useGpsStatus(
+    selectedDevice?.chip_id || null,
+  );
 
   useEffect(() => {
     if (formData.device && selectedDevice) {
       setGpsTestStatus("testing");
       handleCheckGpsStatus();
     }
-  }, [formData.device]);
+  }, [formData.device, selectedDevice, handleCheckGpsStatus]);
 
   useEffect(() => {
     if (gpsTestStatus === "testing") {
@@ -87,22 +117,41 @@ export default function Tracados() {
     if (formData.points.length > 0) {
       const firstPoint = formData.points[0];
       if (firstPoint.lat && firstPoint.lng) {
-        if (formData.startLat !== firstPoint.lat.toString() || formData.startLong !== firstPoint.lng.toString()) {
-          setFormData(prev => ({
+        if (
+          formData.startLat !== firstPoint.lat.toString() ||
+          formData.startLong !== firstPoint.lng.toString()
+        ) {
+          setFormData((prev) => ({
             ...prev,
             startLat: firstPoint.lat.toString(),
-            startLong: firstPoint.lng.toString()
+            startLong: firstPoint.lng.toString(),
           }));
         }
       }
     }
-  }, [formData.points]);
+  }, [formData.points, formData.startLat, formData.startLong]);
 
   const steps = [
-    { title: "Informações do Traçado", description: "Dados básicos sobre o circuito", icon: Info },
-    { title: "Selecionar Dispositivo", description: "Escolha o dispositivo GPS para rastreamento", icon: Radio },
-    { title: "Rastreamento", description: "Percorra o traçado para capturar os pontos", icon: Circle },
-    { title: "Ajustes Finais", description: "Revise e ajuste o traçado capturado", icon: Settings },
+    {
+      title: "Informações do Traçado",
+      description: "Dados básicos sobre o circuito",
+      icon: Info,
+    },
+    {
+      title: "Selecionar Dispositivo",
+      description: "Escolha o dispositivo GPS para rastreamento",
+      icon: Radio,
+    },
+    {
+      title: "Rastreamento",
+      description: "Percorra o traçado para capturar os pontos",
+      icon: Circle,
+    },
+    {
+      title: "Ajustes Finais",
+      description: "Revise e ajuste o traçado capturado",
+      icon: Settings,
+    },
   ];
 
   const handleNext = () => {
@@ -130,32 +179,32 @@ export default function Tracados() {
         tamanho_percurso: formData.length ? parseFloat(formData.length) : null,
         pontos: formData.points,
         direcao: formData.direction,
-        tipo_circuito: 'closed'
+        tipo_circuito: "closed",
       };
 
       // Enviar para API
-      const response = await fetch('/api/v1/circuits', {
-        method: 'POST',
+      const response = await fetch("/api/v1/circuits", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(circuitData),
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar o circuito');
+        throw new Error("Erro ao salvar o circuito");
       }
 
       const result = await response.json();
-      console.log('Circuito salvo com sucesso:', result);
-      
+      console.log("Circuito salvo com sucesso:", result);
+
       // Atualizar a lista de circuitos
       mutateCircuits();
-      
+
       setShowForm(false);
       resetForm();
     } catch (error) {
-      console.error('Erro ao salvar circuito:', error);
+      console.error("Erro ao salvar circuito:", error);
       // Aqui você pode adicionar um toast de erro ou modal
     }
   };
@@ -172,60 +221,68 @@ export default function Tracados() {
 
   const handleSaveEdit = async (circuitId, updatedData) => {
     try {
-      console.log('handleSaveEdit - Enviando atualização para circuito ID:', circuitId);
-      console.log('handleSaveEdit - Dados a serem enviados:', {
+      console.log(
+        "handleSaveEdit - Enviando atualização para circuito ID:",
+        circuitId,
+      );
+      console.log("handleSaveEdit - Dados a serem enviados:", {
         nome: updatedData.nome,
         descricao: updatedData.descricao,
         direcao: updatedData.direcao,
-        totalPontos: updatedData.pontos?.length
+        totalPontos: updatedData.pontos?.length,
       });
-      
+
       // Garantir que tipo_circuito seja sempre 'closed'
-      updatedData.tipo_circuito = 'closed';
+      updatedData.tipo_circuito = "closed";
 
       const response = await fetch(`/api/v1/circuits/${circuitId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedData),
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
-        console.error('handleSaveEdit - Erro na resposta:', result);
-        throw new Error(result.message || 'Erro ao atualizar circuito');
+        console.error("handleSaveEdit - Erro na resposta:", result);
+        throw new Error(result.message || "Erro ao atualizar circuito");
       }
 
-      console.log('handleSaveEdit - Circuito atualizado com sucesso:', result.id);
-      
+      console.log(
+        "handleSaveEdit - Circuito atualizado com sucesso:",
+        result.id,
+      );
+
       // Atualizar a lista de circuitos
       mutateCircuits();
       setShowEditModal(false);
       setSelectedCircuit(null);
     } catch (error) {
-      console.error('handleSaveEdit - Erro:', error);
+      console.error("handleSaveEdit - Erro:", error);
       throw error;
     }
   };
 
   const handleDeleteCircuit = async (circuit) => {
-    if (confirm(`Tem certeza que deseja excluir o circuito "${circuit.nome}"?`)) {
+    if (
+      confirm(`Tem certeza que deseja excluir o circuito "${circuit.nome}"?`)
+    ) {
       try {
         const response = await fetch(`/api/v1/circuits/${circuit.id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
 
         if (!response.ok) {
-          throw new Error('Erro ao excluir circuito');
+          throw new Error("Erro ao excluir circuito");
         }
 
         // Atualizar a lista de circuitos
         mutateCircuits();
-        console.log('Circuito excluído com sucesso');
+        console.log("Circuito excluído com sucesso");
       } catch (error) {
-        console.error('Erro ao excluir circuito:', error);
+        console.error("Erro ao excluir circuito:", error);
         // Aqui você pode adicionar um toast de erro
       }
     }
@@ -245,7 +302,7 @@ export default function Tracados() {
       direction: "clockwise",
       trackingStatus: "ready",
       points: [],
-      trackBuffer: []
+      trackBuffer: [],
     });
   };
 
@@ -255,7 +312,7 @@ export default function Tracados() {
   };
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (field === "device") {
       setGpsTestStatus("idle");
     }
@@ -263,11 +320,16 @@ export default function Tracados() {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 0: return formData.name.trim() !== "";
-      case 1: return formData.device !== "" && gpsTestStatus === "connected";
-      case 2: return formData.points.length > 0;
-      case 3: return true;
-      default: return false;
+      case 0:
+        return formData.name.trim() !== "";
+      case 1:
+        return formData.device !== "" && gpsTestStatus === "connected";
+      case 2:
+        return formData.points.length > 0;
+      case 3:
+        return true;
+      default:
+        return false;
     }
   };
 
@@ -279,11 +341,15 @@ export default function Tracados() {
             <Card>
               <CardHeader>
                 <CardTitle>Dados Básicos</CardTitle>
-                <CardDescription>Informações fundamentais sobre o traçado</CardDescription>
+                <CardDescription>
+                  Informações fundamentais sobre o traçado
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name" className="text-base">Nome do Traçado *</Label>
+                  <Label htmlFor="name" className="text-base">
+                    Nome do Traçado *
+                  </Label>
                   <Input
                     id="name"
                     placeholder="Ex: Autódromo Internacional de SP"
@@ -294,12 +360,16 @@ export default function Tracados() {
                 </div>
 
                 <div>
-                  <Label htmlFor="description" className="text-base">Descrição</Label>
+                  <Label htmlFor="description" className="text-base">
+                    Descrição
+                  </Label>
                   <Textarea
                     id="description"
                     placeholder="Descreva características importantes do traçado..."
                     value={formData.description}
-                    onChange={(e) => updateFormData("description", e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("description", e.target.value)
+                    }
                     className="mt-2 min-h-[120px]"
                   />
                 </div>
@@ -314,35 +384,49 @@ export default function Tracados() {
             <Card>
               <CardHeader>
                 <CardTitle>Dispositivo GPS</CardTitle>
-                <CardDescription>Selecione o dispositivo que será usado para capturar o traçado</CardDescription>
+                <CardDescription>
+                  Selecione o dispositivo que será usado para capturar o traçado
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {devicesLoading ? (
                   <div className="text-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
-                    <p className="text-muted-foreground">Carregando dispositivos...</p>
+                    <p className="text-muted-foreground">
+                      Carregando dispositivos...
+                    </p>
                   </div>
                 ) : devicesError ? (
                   <div className="text-center py-12">
-                    <p className="text-red-500">Erro ao carregar dispositivos</p>
+                    <p className="text-red-500">
+                      Erro ao carregar dispositivos
+                    </p>
                   </div>
                 ) : !devices || devices.length === 0 ? (
                   <div className="text-center py-12 space-y-4">
                     <Radio className="w-20 h-20 text-muted-foreground mx-auto" />
                     <div>
-                      <p className="font-semibold text-xl mb-2">Nenhum dispositivo cadastrado</p>
+                      <p className="font-semibold text-xl mb-2">
+                        Nenhum dispositivo cadastrado
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Cadastre um dispositivo para começar a rastrear traçados
                       </p>
                     </div>
-                    <Button size="lg" onClick={() => router.push('/dispositivos')}>
+                    <Button
+                      size="lg"
+                      onClick={() => router.push("/dispositivos")}
+                    >
                       <Plus className="w-5 h-5 mr-2" />
                       Ir para Dispositivos
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <Select value={formData.device} onValueChange={(value) => updateFormData("device", value)}>
+                    <Select
+                      value={formData.device}
+                      onValueChange={(value) => updateFormData("device", value)}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecione um dispositivo" />
                       </SelectTrigger>
@@ -350,15 +434,19 @@ export default function Tracados() {
                         {devices.map((device) => (
                           <SelectItem key={device.id} value={device.id}>
                             {device.name || `Dispositivo #${device.chip_id}`}
-                            {device.status === 'online' && ' 🟢'}
-                            {device.status === 'offline' && ' 🔴'}
+                            {device.status === "online" && " 🟢"}
+                            {device.status === "offline" && " 🔴"}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
                     <div className="flex justify-end">
-                      <Button variant="link" size="sm" onClick={() => router.push('/dispositivos')}>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => router.push("/dispositivos")}
+                      >
                         <ExternalLink className="w-3 h-3 mr-1" />
                         Gerenciar dispositivos
                       </Button>
@@ -376,8 +464,13 @@ export default function Tracados() {
                       <div className="flex items-start gap-3">
                         <Loader2 className="w-6 h-6 text-blue-600 dark:text-blue-400 animate-spin mt-0.5" />
                         <div className="text-sm text-blue-800 dark:text-blue-200">
-                          <p className="font-semibold text-base mb-1">Testando conexão GPS...</p>
-                          <p>Aguarde enquanto verificamos a conexão com o dispositivo.</p>
+                          <p className="font-semibold text-base mb-1">
+                            Testando conexão GPS...
+                          </p>
+                          <p>
+                            Aguarde enquanto verificamos a conexão com o
+                            dispositivo.
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -390,8 +483,13 @@ export default function Tracados() {
                       <div className="flex items-start gap-3">
                         <Wifi className="w-6 h-6 text-green-600 dark:text-green-400 mt-0.5" />
                         <div className="text-sm text-green-800 dark:text-green-200">
-                          <p className="font-semibold text-base mb-1">✓ GPS Conectado!</p>
-                          <p>O dispositivo está online e pronto para uso. Você pode avançar para a próxima etapa.</p>
+                          <p className="font-semibold text-base mb-1">
+                            ✓ GPS Conectado!
+                          </p>
+                          <p>
+                            O dispositivo está online e pronto para uso. Você
+                            pode avançar para a próxima etapa.
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -405,8 +503,13 @@ export default function Tracados() {
                         <div className="flex items-start gap-3">
                           <WifiOff className="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5" />
                           <div className="text-sm text-red-800 dark:text-red-200 flex-1">
-                            <p className="font-semibold text-base mb-1">✗ Falha na Conexão</p>
-                            <p>Não foi possível conectar ao GPS. Verifique se o dispositivo está ligado e tente novamente.</p>
+                            <p className="font-semibold text-base mb-1">
+                              ✗ Falha na Conexão
+                            </p>
+                            <p>
+                              Não foi possível conectar ao GPS. Verifique se o
+                              dispositivo está ligado e tente novamente.
+                            </p>
                           </div>
                         </div>
                         <Button
@@ -438,7 +541,9 @@ export default function Tracados() {
             points={formData.points}
             trackingStatus={formData.trackingStatus}
             onUpdatePoints={(points) => updateFormData("points", points)}
-            onUpdateTrackingStatus={(status) => updateFormData("trackingStatus", status)}
+            onUpdateTrackingStatus={(status) =>
+              updateFormData("trackingStatus", status)
+            }
             onUpdateStartPosition={(lat, long) => {
               updateFormData("startLat", lat);
               updateFormData("startLong", long);
@@ -453,7 +558,9 @@ export default function Tracados() {
             <Card>
               <CardHeader>
                 <CardTitle>Revisão Final</CardTitle>
-                <CardDescription>Confira os dados e visualize o traçado antes de salvar</CardDescription>
+                <CardDescription>
+                  Confira os dados e visualize o traçado antes de salvar
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Preview do Mapa */}
@@ -461,10 +568,15 @@ export default function Tracados() {
                   <div>
                     <h3 className="font-semibold text-sm text-muted-foreground mb-3">
                       Visualização do Traçado
-                      <span className="text-xs ml-2 text-muted-foreground">(Arraste a bandeira 🏁 para escolher o ponto de largada)</span>
+                      <span className="text-xs ml-2 text-muted-foreground">
+                        (Arraste a bandeira 🏁 para escolher o ponto de largada)
+                      </span>
                     </h3>
                     <MapPreviewClean
-                      points={formData.points.map((point, index) => ({ ...point, index }))}
+                      points={formData.points.map((point, index) => ({
+                        ...point,
+                        index,
+                      }))}
                       direction={formData.direction}
                       className="h-96 w-full"
                       showCurrentPosition={false}
@@ -473,13 +585,13 @@ export default function Tracados() {
                         if (closestIndex !== undefined && closestIndex !== 0) {
                           const reorderedPoints = [
                             ...formData.points.slice(closestIndex),
-                            ...formData.points.slice(0, closestIndex)
+                            ...formData.points.slice(0, closestIndex),
                           ];
-                          setFormData(prev => ({
+                          setFormData((prev) => ({
                             ...prev,
                             points: reorderedPoints,
                             startLat: lat.toString(),
-                            startLong: lng.toString()
+                            startLong: lng.toString(),
                           }));
                         } else {
                           updateFormData("startLat", lat.toString());
@@ -495,7 +607,9 @@ export default function Tracados() {
                 {/* Editar Informações do Traçado */}
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="review-name" className="text-base">Nome do Traçado *</Label>
+                    <Label htmlFor="review-name" className="text-base">
+                      Nome do Traçado *
+                    </Label>
                     <Input
                       id="review-name"
                       value={formData.name}
@@ -506,19 +620,21 @@ export default function Tracados() {
                   </div>
 
                   <div>
-                    <Label htmlFor="review-direction" className="text-base">Direção do Traçado *</Label>
+                    <Label htmlFor="review-direction" className="text-base">
+                      Direção do Traçado *
+                    </Label>
                     <Select
                       value={formData.direction}
                       onValueChange={(value) => {
                         // Inverter os pontos ao trocar a direção
                         if (value !== formData.direction) {
                           const reversedPoints = [...formData.points].reverse();
-                          setFormData(prev => ({
+                          setFormData((prev) => ({
                             ...prev,
                             direction: value,
                             points: reversedPoints,
                             startLat: reversedPoints[0].lat.toString(),
-                            startLong: reversedPoints[0].lng.toString()
+                            startLong: reversedPoints[0].lng.toString(),
                           }));
                         }
                       }}
@@ -527,26 +643,46 @@ export default function Tracados() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="clockwise">↻ Sentido Horário</SelectItem>
-                        <SelectItem value="counterclockwise">↺ Sentido Anti-horário</SelectItem>
+                        <SelectItem value="clockwise">
+                          ↻ Sentido Horário
+                        </SelectItem>
+                        <SelectItem value="counterclockwise">
+                          ↺ Sentido Anti-horário
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">Inverter a direção reordena os pontos automaticamente</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Inverter a direção reordena os pontos automaticamente
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <span className="font-semibold text-sm text-muted-foreground">Ponto Inicial (Latitude):</span>
-                      <p className="text-base font-medium mt-1 font-mono">{formData.startLat || "-"}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Arraste a bandeira 🏁 no mapa para alterar</p>
+                      <span className="font-semibold text-sm text-muted-foreground">
+                        Ponto Inicial (Latitude):
+                      </span>
+                      <p className="text-base font-medium mt-1 font-mono">
+                        {formData.startLat || "-"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Arraste a bandeira 🏁 no mapa para alterar
+                      </p>
                     </div>
                     <div>
-                      <span className="font-semibold text-sm text-muted-foreground">Ponto Inicial (Longitude):</span>
-                      <p className="text-base font-medium mt-1 font-mono">{formData.startLong || "-"}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Arraste a bandeira 🏁 no mapa para alterar</p>
+                      <span className="font-semibold text-sm text-muted-foreground">
+                        Ponto Inicial (Longitude):
+                      </span>
+                      <p className="text-base font-medium mt-1 font-mono">
+                        {formData.startLong || "-"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Arraste a bandeira 🏁 no mapa para alterar
+                      </p>
                     </div>
                     <div>
-                      <span className="font-semibold text-sm text-muted-foreground">Tipo:</span>
+                      <span className="font-semibold text-sm text-muted-foreground">
+                        Tipo:
+                      </span>
                       <p className="text-base font-medium mt-1">
                         🔄 Circuito Fechado
                       </p>
@@ -555,7 +691,9 @@ export default function Tracados() {
 
                   {formData.description && (
                     <div className="pt-4 border-t">
-                      <span className="font-semibold text-sm text-muted-foreground">Descrição:</span>
+                      <span className="font-semibold text-sm text-muted-foreground">
+                        Descrição:
+                      </span>
                       <p className="text-base mt-2">{formData.description}</p>
                     </div>
                   )}
@@ -569,7 +707,10 @@ export default function Tracados() {
                   <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 mt-0.5" />
                   <div className="text-sm text-green-800 dark:text-green-200">
                     <p className="font-semibold text-base mb-1">Tudo pronto!</p>
-                    <p>Clique em "Finalizar Cadastro" para salvar o traçado.</p>
+                    <p>
+                      Clique em &quot;Finalizar Cadastro&quot; para salvar o
+                      traçado.
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -585,11 +726,13 @@ export default function Tracados() {
   return (
     <LayoutMainPainel>
       {!showForm ? (
-        <div style={{ display: showDetailModal ? 'none' : 'block' }}>
+        <div style={{ display: showDetailModal ? "none" : "block" }}>
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Traçados</h1>
-              <p className="text-muted-foreground mt-1">Gerencie os circuitos cadastrados</p>
+              <p className="text-muted-foreground mt-1">
+                Gerencie os circuitos cadastrados
+              </p>
             </div>
             <Button size="lg" onClick={() => setShowForm(true)}>
               <Plus className="w-5 h-5 mr-2" />
@@ -602,7 +745,9 @@ export default function Tracados() {
               <CardContent className="py-20">
                 <div className="text-center space-y-4">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                  <p className="text-muted-foreground">Carregando circuitos...</p>
+                  <p className="text-muted-foreground">
+                    Carregando circuitos...
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -620,7 +765,9 @@ export default function Tracados() {
                 <div className="text-center space-y-4">
                   <MapPin className="w-20 h-20 text-muted-foreground mx-auto" />
                   <div>
-                    <p className="font-semibold text-xl">Nenhum circuito cadastrado</p>
+                    <p className="font-semibold text-xl">
+                      Nenhum circuito cadastrado
+                    </p>
                     <p className="text-muted-foreground mt-2">
                       Comece adicionando seu primeiro circuito
                     </p>
@@ -685,8 +832,8 @@ export default function Tracados() {
                           isCompleted
                             ? "bg-green-500 w-6"
                             : isCurrent
-                            ? "bg-primary w-8"
-                            : "bg-muted w-6"
+                              ? "bg-primary w-8"
+                              : "bg-muted w-6"
                         }`}
                       />
                     );
@@ -796,8 +943,8 @@ export default function Tracados() {
                               isCompleted
                                 ? "bg-green-500"
                                 : isCurrent
-                                ? "bg-primary w-6"
-                                : "bg-muted"
+                                  ? "bg-primary w-6"
+                                  : "bg-muted"
                             }`}
                           />
                         );
@@ -844,7 +991,10 @@ export default function Tracados() {
             </CardContent>
           </Card>
 
-          <div className="min-h-[500px]" style={{ display: showDetailModal ? 'none' : 'block' }}>
+          <div
+            className="min-h-[500px]"
+            style={{ display: showDetailModal ? "none" : "block" }}
+          >
             {renderStepContent()}
           </div>
         </div>

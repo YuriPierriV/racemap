@@ -5,13 +5,15 @@ import useMqttMessages from "pages/mqtt/useMqttMessages";
 
 export const useGpsStatus = (gpsChip) => {
   const { publishMessage, isConnected } = useMqttPublish();
-  const [gpsStatus, setGpsStatus] = useState(gpsChip ? "Aguardando..." : "Desconectado");
+  const [gpsStatus, setGpsStatus] = useState(
+    gpsChip ? "Aguardando..." : "Desconectado",
+  );
   const [mode, setMode] = useState(gpsChip ? "Aguardando..." : null);
   const [lastCheckTime, setLastCheckTime] = useState(null);
   const timeoutRef = useRef(null);
   const intervalRef = useRef(null);
   const currentStatusRef = useRef(gpsChip ? "Aguardando..." : "Desconectado");
-  
+
   // Atualizar a ref quando o status mudar
   useEffect(() => {
     currentStatusRef.current = gpsStatus;

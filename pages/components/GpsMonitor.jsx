@@ -1,6 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Satellite, MapPin, Gauge, Signal, SignalHigh, SignalLow, SignalMedium } from "lucide-react";
+import {
+  Satellite,
+  MapPin,
+  Gauge,
+  Signal,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+} from "lucide-react";
 
 /**
  * Componente para exibir qualidade de conexão
@@ -43,9 +57,13 @@ const ConnectionQualityIndicator = ({ quality }) => {
   const Icon = config.icon;
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}>
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}
+    >
       <Icon className={`w-4 h-4 ${config.color}`} />
-      <span className={`text-sm font-medium ${config.color}`}>{config.text}</span>
+      <span className={`text-sm font-medium ${config.color}`}>
+        {config.text}
+      </span>
     </div>
   );
 };
@@ -65,7 +83,9 @@ export default function GpsMonitor({ gpsData, connectionQuality, trackStats }) {
     lastUpdate,
   } = gpsData;
 
-  const timeSinceUpdate = lastUpdate ? Math.floor((Date.now() - lastUpdate) / 1000) : null;
+  const timeSinceUpdate = lastUpdate
+    ? Math.floor((Date.now() - lastUpdate) / 1000)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -133,13 +153,19 @@ export default function GpsMonitor({ gpsData, connectionQuality, trackStats }) {
       {trackStats && trackStats.totalPoints > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Estatísticas de Rastreamento</CardTitle>
+            <CardTitle className="text-lg">
+              Estatísticas de Rastreamento
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Pontos capturados:</span>
-                <div className="text-lg font-bold">{trackStats.totalPoints}</div>
+                <span className="text-muted-foreground">
+                  Pontos capturados:
+                </span>
+                <div className="text-lg font-bold">
+                  {trackStats.totalPoints}
+                </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Distância:</span>
@@ -148,17 +174,24 @@ export default function GpsMonitor({ gpsData, connectionQuality, trackStats }) {
                 </div>
               </div>
               <div>
-                <span className="text-muted-foreground">Velocidade máxima:</span>
-                <div className="text-lg font-bold">{trackStats.maxSpeed.toFixed(1)} km/h</div>
+                <span className="text-muted-foreground">
+                  Velocidade máxima:
+                </span>
+                <div className="text-lg font-bold">
+                  {trackStats.maxSpeed.toFixed(1)} km/h
+                </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Velocidade média:</span>
-                <div className="text-lg font-bold">{trackStats.avgSpeed.toFixed(1)} km/h</div>
+                <div className="text-lg font-bold">
+                  {trackStats.avgSpeed.toFixed(1)} km/h
+                </div>
               </div>
               <div className="col-span-2">
                 <span className="text-muted-foreground">Duração:</span>
                 <div className="text-lg font-bold">
-                  {Math.floor(trackStats.duration / 60)}m {Math.floor(trackStats.duration % 60)}s
+                  {Math.floor(trackStats.duration / 60)}m{" "}
+                  {Math.floor(trackStats.duration % 60)}s
                 </div>
               </div>
             </div>

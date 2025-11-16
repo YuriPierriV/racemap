@@ -28,19 +28,28 @@ async function patchHandler(request, response) {
   try {
     const { id } = request.query;
     const updateValues = request.body;
-    
-    console.log('PATCH /api/v1/circuits/:id - ID:', id);
-    console.log('PATCH /api/v1/circuits/:id - Campos recebidos:', Object.keys(updateValues));
-    console.log('PATCH /api/v1/circuits/:id - Nome:', updateValues.nome);
-    console.log('PATCH /api/v1/circuits/:id - Total de pontos:', updateValues.pontos?.length);
-    
+
+    console.log("PATCH /api/v1/circuits/:id - ID:", id);
+    console.log(
+      "PATCH /api/v1/circuits/:id - Campos recebidos:",
+      Object.keys(updateValues),
+    );
+    console.log("PATCH /api/v1/circuits/:id - Nome:", updateValues.nome);
+    console.log(
+      "PATCH /api/v1/circuits/:id - Total de pontos:",
+      updateValues.pontos?.length,
+    );
+
     const updatedCircuit = await circuit.update(id, updateValues);
-    
-    console.log('PATCH /api/v1/circuits/:id - Circuito atualizado com sucesso, ID:', updatedCircuit.id);
-    
+
+    console.log(
+      "PATCH /api/v1/circuits/:id - Circuito atualizado com sucesso, ID:",
+      updatedCircuit.id,
+    );
+
     return response.status(200).json(updatedCircuit);
   } catch (error) {
-    console.error('PATCH /api/v1/circuits/:id - Erro:', error.message);
+    console.error("PATCH /api/v1/circuits/:id - Erro:", error.message);
     throw error;
   }
 }

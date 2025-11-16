@@ -15,7 +15,8 @@ exports.up = (pgm) => {
       type: "varchar(20)",
       notNull: false,
       default: "closed",
-      comment: "Tipo do circuito: 'closed' (fechado) ou 'point-to-point' (ponto a ponto)",
+      comment:
+        "Tipo do circuito: 'closed' (fechado) ou 'point-to-point' (ponto a ponto)",
     },
   });
 

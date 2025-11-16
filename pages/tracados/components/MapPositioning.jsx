@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -19,7 +13,7 @@ import {
   Radio,
   Navigation,
   Target,
-  Activity
+  Activity,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import useGpsData from "pages/mqtt/useGpsData";
@@ -27,32 +21,29 @@ import useGpsData from "pages/mqtt/useGpsData";
 // Importação dinâmica do Leaflet para evitar erros de SSR
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
+  { ssr: false },
 );
 const TileLayer = dynamic(
   () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
+  { ssr: false },
 );
 const Circle = dynamic(
   () => import("react-leaflet").then((mod) => mod.Circle),
-  { ssr: false }
+  { ssr: false },
 );
-const RecenterMap = dynamic(
-  () => import("./RecenterMap"),
-  { ssr: false }
-);
+const RecenterMap = dynamic(() => import("./RecenterMap"), { ssr: false });
 
-export default function MapPositioning({ selectedDevice, startLat, startLong, onUpdatePosition, onNext }) {
+export default function MapPositioning({
+  selectedDevice,
+  onUpdatePosition,
+  onNext,
+}) {
   const [mapView, setMapView] = useState("satellite");
 
-  const {
-    gpsData,
-    connectionQuality,
-    hasValidPosition,
-    isGpsConnected
-  } = useGpsData(selectedDevice?.chip_id, {
-    enableTracking: false
-  });
+  const { gpsData, connectionQuality, hasValidPosition, isGpsConnected } =
+    useGpsData(selectedDevice?.chip_id, {
+      enableTracking: false,
+    });
 
   const currentLat = gpsData?.lat ?? 0;
   const currentLong = gpsData?.long ?? 0;
@@ -60,16 +51,14 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
   const speed = gpsData?.speedKmph ?? 0;
   const hasPosition = hasValidPosition && currentLat && currentLong;
 
-  const mapCenter = hasPosition
-    ? [currentLat, currentLong]
-    : [-15.78, -47.93]; // Brasília
+  const mapCenter = hasPosition ? [currentLat, currentLong] : [-15.78, -47.93]; // Brasília
 
   const getQualityBar = () => {
     const colors = {
       excellent: "bg-green-500",
       good: "bg-blue-500",
       poor: "bg-yellow-500",
-      lost: "bg-red-500"
+      lost: "bg-red-500",
     };
     return colors[connectionQuality] || "bg-gray-400";
   };
@@ -121,7 +110,7 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
                   pathOptions={{
                     color: isGpsConnected ? "#22c55e" : "#ef4444",
                     fillColor: isGpsConnected ? "#22c55e" : "#ef4444",
-                    fillOpacity: 0.2
+                    fillOpacity: 0.2,
                   }}
                 />
                 <RecenterMap center={[currentLat, currentLong]} />
@@ -161,11 +150,18 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
                 <Radio className="w-4 h-4" />
                 Status do Dispositivo
               </div>
-              <Badge variant={isGpsConnected ? "default" : "secondary"} className="text-xs">
+              <Badge
+                variant={isGpsConnected ? "default" : "secondary"}
+                className="text-xs"
+              >
                 {isGpsConnected ? (
-                  <><Wifi className="w-3 h-3 mr-1" /> Conectado</>
+                  <>
+                    <Wifi className="w-3 h-3 mr-1" /> Conectado
+                  </>
                 ) : (
-                  <><WifiOff className="w-3 h-3 mr-1" /> Desconectado</>
+                  <>
+                    <WifiOff className="w-3 h-3 mr-1" /> Desconectado
+                  </>
                 )}
               </Badge>
             </CardTitle>
@@ -174,7 +170,9 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
             {/* Nome do Dispositivo */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Dispositivo</span>
-              <span className="font-medium">{selectedDevice?.chip_id || "N/A"}</span>
+              <span className="font-medium">
+                {selectedDevice?.chip_id || "N/A"}
+              </span>
             </div>
 
             <Separator />
@@ -182,17 +180,25 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
             {/* Qualidade de Sinal */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Qualidade do Sinal</span>
-                <span className="font-medium capitalize">{connectionQuality}</span>
+                <span className="text-muted-foreground">
+                  Qualidade do Sinal
+                </span>
+                <span className="font-medium capitalize">
+                  {connectionQuality}
+                </span>
               </div>
               <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full ${getQualityBar()} transition-all duration-500`}
                   style={{
                     width:
-                      connectionQuality === "excellent" ? "100%" :
-                      connectionQuality === "good" ? "75%" :
-                      connectionQuality === "poor" ? "40%" : "15%"
+                      connectionQuality === "excellent"
+                        ? "100%"
+                        : connectionQuality === "good"
+                          ? "75%"
+                          : connectionQuality === "poor"
+                            ? "40%"
+                            : "15%",
                   }}
                 />
               </div>
@@ -214,13 +220,17 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
                 {/* Coordenadas */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Latitude</Label>
+                    <Label className="text-xs text-muted-foreground">
+                      Latitude
+                    </Label>
                     <div className="font-mono text-sm font-medium">
                       {currentLat.toFixed(6)}°
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Longitude</Label>
+                    <Label className="text-xs text-muted-foreground">
+                      Longitude
+                    </Label>
                     <div className="font-mono text-sm font-medium">
                       {currentLong.toFixed(6)}°
                     </div>
@@ -234,15 +244,21 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
                   <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
                     <Radio className="w-4 h-4 text-primary" />
                     <div>
-                      <div className="text-xs text-muted-foreground">Satélites</div>
+                      <div className="text-xs text-muted-foreground">
+                        Satélites
+                      </div>
                       <div className="text-sm font-semibold">{satellites}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
                     <Activity className="w-4 h-4 text-primary" />
                     <div>
-                      <div className="text-xs text-muted-foreground">Velocidade</div>
-                      <div className="text-sm font-semibold">{speed.toFixed(0)} km/h</div>
+                      <div className="text-xs text-muted-foreground">
+                        Velocidade
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {speed.toFixed(0)} km/h
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -250,7 +266,7 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
                 <Separator />
 
                 {/* Botão de Ação - Avança para próximo passo */}
-                <Button 
+                <Button
                   onClick={handleUsePosition}
                   disabled={!isGpsConnected}
                   className="w-full h-11"
@@ -262,8 +278,12 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin mb-3" />
-                <span className="text-sm font-medium">Aguardando sinal GPS</span>
-                <span className="text-xs mt-1">Verifique a conexão do dispositivo</span>
+                <span className="text-sm font-medium">
+                  Aguardando sinal GPS
+                </span>
+                <span className="text-xs mt-1">
+                  Verifique a conexão do dispositivo
+                </span>
               </div>
             )}
           </CardContent>
@@ -275,12 +295,17 @@ export default function MapPositioning({ selectedDevice, startLat, startLong, on
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-blue-800 dark:text-blue-200">
-                <p className="font-semibold mb-2">Sobre o Posicionamento Inicial</p>
+                <p className="font-semibold mb-2">
+                  Sobre o Posicionamento Inicial
+                </p>
                 <ul className="text-xs space-y-1.5 list-disc list-inside">
                   <li>Este ponto marca o início do seu traçado</li>
                   <li>Será usado como referência para o rastreamento</li>
                   <li>Na próxima etapa, você percorrerá o circuito</li>
-                  <li>O sistema capturará pontos automaticamente e plotará o traçado no mapa</li>
+                  <li>
+                    O sistema capturará pontos automaticamente e plotará o
+                    traçado no mapa
+                  </li>
                 </ul>
               </div>
             </div>

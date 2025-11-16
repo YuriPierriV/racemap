@@ -3,7 +3,14 @@ import AddNewDevice from "./lista-de-dispositivos/_add-new-device";
 import AddDeviceCard from "./lista-de-dispositivos/_add-device-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@/components/ui/empty";
 import { Radio, Wifi, WifiOff } from "lucide-react";
 import useSWR from "swr";
 import CardDevice from "./lista-de-dispositivos/_device-card";
@@ -44,7 +51,8 @@ export default function ListaDeDispositivos() {
                 </EmptyMedia>
                 <EmptyTitle>Nenhum dispositivo cadastrado</EmptyTitle>
                 <EmptyDescription>
-                  Adicione seu primeiro dispositivo GPS para começar a rastrear traçados e monitorar corridas em tempo real.
+                  Adicione seu primeiro dispositivo GPS para começar a rastrear
+                  traçados e monitorar corridas em tempo real.
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
@@ -66,7 +74,8 @@ export default function ListaDeDispositivos() {
             <p>Carregando dispositivos...</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
-          ) : data.filter(device => device.status === 'online').length === 0 ? (
+          ) : data.filter((device) => device.status === "online").length ===
+            0 ? (
             <Empty className="border-2">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -74,7 +83,8 @@ export default function ListaDeDispositivos() {
                 </EmptyMedia>
                 <EmptyTitle>Nenhum dispositivo conectado</EmptyTitle>
                 <EmptyDescription>
-                  Não há dispositivos online no momento. Certifique-se de que os dispositivos estão ligados e com conexão.
+                  Não há dispositivos online no momento. Certifique-se de que os
+                  dispositivos estão ligados e com conexão.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -97,7 +107,8 @@ export default function ListaDeDispositivos() {
             <p>Carregando dispositivos...</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
-          ) : data.filter(device => device.status === 'offline').length === 0 ? (
+          ) : data.filter((device) => device.status === "offline").length ===
+            0 ? (
             <Empty className="border-2">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -105,7 +116,8 @@ export default function ListaDeDispositivos() {
                 </EmptyMedia>
                 <EmptyTitle>Nenhum dispositivo desconectado</EmptyTitle>
                 <EmptyDescription>
-                  Ótimo! Todos os seus dispositivos estão online e funcionando corretamente.
+                  Ótimo! Todos os seus dispositivos estão online e funcionando
+                  corretamente.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

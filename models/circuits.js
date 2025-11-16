@@ -17,7 +17,11 @@ async function create(circuitInputValues) {
     }
 
     // Valida se os pontos estão presentes e são um array válido
-    if (!inputValues.pontos || !Array.isArray(inputValues.pontos) || inputValues.pontos.length === 0) {
+    if (
+      !inputValues.pontos ||
+      !Array.isArray(inputValues.pontos) ||
+      inputValues.pontos.length === 0
+    ) {
       throw new ValidationError({
         message: "Os pontos do circuito são obrigatórios.",
         action: "Informe pelo menos um ponto para o circuito.",
@@ -25,7 +29,10 @@ async function create(circuitInputValues) {
     }
 
     // Valida se a direção é válida
-    if (inputValues.direcao && !['clockwise', 'counterclockwise'].includes(inputValues.direcao)) {
+    if (
+      inputValues.direcao &&
+      !["clockwise", "counterclockwise"].includes(inputValues.direcao)
+    ) {
       throw new ValidationError({
         message: "A direção deve ser 'clockwise' ou 'counterclockwise'.",
         action: "Informe uma direção válida para o circuito.",
@@ -33,7 +40,10 @@ async function create(circuitInputValues) {
     }
 
     // Valida se o tipo de circuito é válido
-    if (inputValues.tipo_circuito && !['closed', 'point-to-point'].includes(inputValues.tipo_circuito)) {
+    if (
+      inputValues.tipo_circuito &&
+      !["closed", "point-to-point"].includes(inputValues.tipo_circuito)
+    ) {
       throw new ValidationError({
         message: "O tipo de circuito deve ser 'closed' ou 'point-to-point'.",
         action: "Informe um tipo válido para o circuito.",
@@ -41,7 +51,10 @@ async function create(circuitInputValues) {
     }
 
     // Valida se o tamanho do percurso é um número positivo
-    if (inputValues.tamanho_percurso && (isNaN(inputValues.tamanho_percurso) || inputValues.tamanho_percurso < 0)) {
+    if (
+      inputValues.tamanho_percurso &&
+      (isNaN(inputValues.tamanho_percurso) || inputValues.tamanho_percurso < 0)
+    ) {
       throw new ValidationError({
         message: "O tamanho do percurso deve ser um número positivo.",
         action: "Informe um tamanho válido para o circuito.",
@@ -61,8 +74,8 @@ async function create(circuitInputValues) {
         inputValues.descricao || null,
         inputValues.tamanho_percurso || null,
         JSON.stringify(inputValues.pontos),
-        inputValues.direcao || 'clockwise',
-        inputValues.tipo_circuito || 'closed',
+        inputValues.direcao || "clockwise",
+        inputValues.tipo_circuito || "closed",
       ],
     });
     return results.rows[0];
@@ -119,13 +132,16 @@ async function findOneById(circuitId, options = {}) {
 
 async function update(circuitId, updateValues) {
   await validateUpdateData(updateValues);
-  
+
   const updatedCircuit = await runUpdateQuery(circuitId, updateValues);
   return updatedCircuit;
 
   async function validateUpdateData(inputValues) {
     // Valida se a direção é válida (se fornecida)
-    if (inputValues.direcao && !['clockwise', 'counterclockwise'].includes(inputValues.direcao)) {
+    if (
+      inputValues.direcao &&
+      !["clockwise", "counterclockwise"].includes(inputValues.direcao)
+    ) {
       throw new ValidationError({
         message: "A direção deve ser 'clockwise' ou 'counterclockwise'.",
         action: "Informe uma direção válida para o circuito.",
@@ -133,7 +149,10 @@ async function update(circuitId, updateValues) {
     }
 
     // Valida se o tipo de circuito é válido (se fornecido)
-    if (inputValues.tipo_circuito && !['closed', 'point-to-point'].includes(inputValues.tipo_circuito)) {
+    if (
+      inputValues.tipo_circuito &&
+      !["closed", "point-to-point"].includes(inputValues.tipo_circuito)
+    ) {
       throw new ValidationError({
         message: "O tipo de circuito deve ser 'closed' ou 'point-to-point'.",
         action: "Informe um tipo válido para o circuito.",
@@ -141,7 +160,10 @@ async function update(circuitId, updateValues) {
     }
 
     // Valida se o tamanho do percurso é um número positivo (se fornecido)
-    if (inputValues.tamanho_percurso && (isNaN(inputValues.tamanho_percurso) || inputValues.tamanho_percurso < 0)) {
+    if (
+      inputValues.tamanho_percurso &&
+      (isNaN(inputValues.tamanho_percurso) || inputValues.tamanho_percurso < 0)
+    ) {
       throw new ValidationError({
         message: "O tamanho do percurso deve ser um número positivo.",
         action: "Informe um tamanho válido para o circuito.",
@@ -203,7 +225,7 @@ async function update(circuitId, updateValues) {
     const query = {
       text: `
           UPDATE circuits 
-          SET ${updateFields.join(', ')}
+          SET ${updateFields.join(", ")}
           WHERE id = $${paramCount}
           RETURNING *
         `,

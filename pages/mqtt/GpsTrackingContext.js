@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { useGpsData } from "./useGpsData";
 
@@ -7,7 +8,7 @@ const GpsTrackingContext = createContext();
  * Provider para gerenciar rastreamento de múltiplos dispositivos GPS
  */
 export const GpsTrackingProvider = ({ children }) => {
-  const [trackedDevices, setTrackedDevices] = useState(new Map());
+  const [trackedDevices, setTrackedDevices] = useState(() => new Map());
   const [activeDeviceId, setActiveDeviceId] = useState(null);
 
   // Iniciar rastreamento de um dispositivo
@@ -48,21 +49,24 @@ export const GpsTrackingProvider = ({ children }) => {
   }, []);
 
   // Remover dispositivo do rastreamento
-  const removeDevice = useCallback((deviceChipId) => {
-    setTrackedDevices((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(deviceChipId);
-      return newMap;
-    });
+  const removeDevice = useCallback(
+    (deviceChipId) => {
+      setTrackedDevices((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(deviceChipId);
+        return newMap;
+      });
 
-    if (activeDeviceId === deviceChipId) {
-      setActiveDeviceId(null);
-    }
-  }, [activeDeviceId]);
+      if (activeDeviceId === deviceChipId) {
+        setActiveDeviceId(null);
+      }
+    },
+    [activeDeviceId],
+  );
 
   // Limpar todos os rastreamentos
   const clearAll = useCallback(() => {
-    setTrackedDevices(new Map());
+    setTrackedDevices(() => new Map());
     setActiveDeviceId(null);
   }, []);
 
@@ -72,9 +76,15 @@ export const GpsTrackingProvider = ({ children }) => {
   }, [trackedDevices]);
 
   // Verificar se um dispositivo está sendo rastreado
-  const isDeviceTracked = useCallback((deviceChipId) => {
-    return trackedDevices.has(deviceChipId) && trackedDevices.get(deviceChipId).isActive;
-  }, [trackedDevices]);
+  const isDeviceTracked = useCallback(
+    (deviceChipId) => {
+      return (
+        trackedDevices.has(deviceChipId) &&
+        trackedDevices.get(deviceChipId).isActive
+      );
+    },
+    [trackedDevices],
+  );
 
   const value = {
     trackedDevices,
@@ -101,7 +111,9 @@ export const GpsTrackingProvider = ({ children }) => {
 export const useGpsTracking = () => {
   const context = useContext(GpsTrackingContext);
   if (!context) {
-    throw new Error("useGpsTracking deve ser usado dentro de GpsTrackingProvider");
+    throw new Error(
+      "useGpsTracking deve ser usado dentro de GpsTrackingProvider",
+    );
   }
   return context;
 };

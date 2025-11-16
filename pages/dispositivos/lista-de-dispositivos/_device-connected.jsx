@@ -29,7 +29,7 @@ export function DeviceConnectionPanel({ deviceId, onConnectionResult }) {
     } else {
       onConnectionResult(false);
     }
-  }, [deviceStatus]);
+  }, [deviceStatus, onConnectionResult]);
 
   function handleCheckStatus() {
     setTestConn(true);
@@ -101,7 +101,7 @@ const ConnectionState = forwardRef(({ deviceId, setDeviceStatus }, ref) => {
   useImperativeHandle(ref, () => handleCheckGpsStatus);
   useEffect(() => {
     setDeviceStatus(gpsStatus);
-  }, [gpsStatus]);
+  }, [gpsStatus, setDeviceStatus]);
 
   // Efeito para animação do WiFi quando aguardando
   useEffect(() => {

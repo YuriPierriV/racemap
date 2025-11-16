@@ -1,21 +1,24 @@
-
-import { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
   Route,
-  Navigation,
   Calendar,
   Clock,
   RotateCcw,
   RotateCw,
   X,
   Download,
-  Share
+  Share,
 } from "lucide-react";
-import MapPreview from './MapPreview';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import MapPreview from "./MapPreview";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
   const [showFullMap, setShowFullMap] = useState(false);
@@ -23,37 +26,39 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
   if (!circuit) return null;
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getDirectionIcon = (direction) => {
-    return direction === 'clockwise' ? RotateCw : RotateCcw;
+    return direction === "clockwise" ? RotateCw : RotateCcw;
   };
 
   const getDirectionColor = (direction) => {
-    return direction === 'clockwise' ? 'text-blue-600' : 'text-red-600';
+    return direction === "clockwise" ? "text-blue-600" : "text-red-600";
   };
 
   const getDirectionText = (direction) => {
-    return direction === 'clockwise' ? 'Sentido Horário' : 'Sentido Anti-horário';
+    return direction === "clockwise"
+      ? "Sentido Horário"
+      : "Sentido Anti-horário";
   };
 
   const DirectionIcon = getDirectionIcon(circuit.direcao);
 
   const handleExport = () => {
     // Implementar exportação do circuito
-    console.log('Exportar circuito:', circuit);
+    console.log("Exportar circuito:", circuit);
   };
 
   const handleShare = () => {
     // Implementar compartilhamento
-    console.log('Compartilhar circuito:', circuit);
+    console.log("Compartilhar circuito:", circuit);
   };
 
   return (
@@ -63,7 +68,7 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
           <div className="flex items-center justify-between">
             <AlertDialogTitle className="text-2xl font-bold">
               {circuit.nome}
-            </AlertDialogTitle> 
+            </AlertDialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -81,27 +86,41 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Route className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Comprimento</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Comprimento
+                </span>
               </div>
               <p className="text-lg font-semibold">
-                {circuit.tamanho_percurso ? `${circuit.tamanho_percurso}m` : 'Não informado'}
+                {circuit.tamanho_percurso
+                  ? `${circuit.tamanho_percurso}m`
+                  : "Não informado"}
               </p>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Pontos</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Pontos
+                </span>
               </div>
-              <p className="text-lg font-semibold">{circuit.pontos?.length || 0}</p>
+              <p className="text-lg font-semibold">
+                {circuit.pontos?.length || 0}
+              </p>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <DirectionIcon className={`w-4 h-4 ${getDirectionColor(circuit.direcao)}`} />
-                <span className="text-sm font-medium text-muted-foreground">Direção</span>
+                <DirectionIcon
+                  className={`w-4 h-4 ${getDirectionColor(circuit.direcao)}`}
+                />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Direção
+                </span>
               </div>
-              <p className={`text-lg font-semibold ${getDirectionColor(circuit.direcao)}`}>
+              <p
+                className={`text-lg font-semibold ${getDirectionColor(circuit.direcao)}`}
+              >
                 {getDirectionText(circuit.direcao)}
               </p>
             </div>
@@ -122,7 +141,9 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Criado em</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Criado em
+                </span>
               </div>
               <p className="font-medium">{formatDate(circuit.created_at)}</p>
             </div>
@@ -130,7 +151,9 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Atualizado em</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Atualizado em
+                </span>
               </div>
               <p className="font-medium">{formatDate(circuit.updated_at)}</p>
             </div>
@@ -140,20 +163,22 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
           {circuit.pontos && circuit.pontos.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Visualização do Traçado</h3>
+                <h3 className="text-lg font-semibold">
+                  Visualização do Traçado
+                </h3>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowFullMap(!showFullMap)}
                   >
-                    {showFullMap ? 'Mapa Pequeno' : 'Mapa Grande'}
+                    {showFullMap ? "Mapa Pequeno" : "Mapa Grande"}
                   </Button>
                 </div>
               </div>
 
               <MapPreview
-                key={`circuit-modal-map-${circuit.id}-${showFullMap ? 'full' : 'small'}`}
+                key={`circuit-modal-map-${circuit.id}-${showFullMap ? "full" : "small"}`}
                 points={circuit.pontos}
                 direction={circuit.direcao}
                 className={showFullMap ? "h-96 w-full" : "h-64 w-full"}
@@ -188,7 +213,11 @@ const CircuitDetailModal = ({ circuit, isOpen, onClose }) => {
               <Badge variant="outline">
                 {circuit.pontos?.length || 0} pontos
               </Badge>
-              <Badge variant={circuit.direcao === 'clockwise' ? 'default' : 'destructive'}>
+              <Badge
+                variant={
+                  circuit.direcao === "clockwise" ? "default" : "destructive"
+                }
+              >
                 {getDirectionText(circuit.direcao)}
               </Badge>
             </div>

@@ -1,14 +1,16 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Navigation, 
-  Eye
-} from "lucide-react";
-import MapPreview from './MapPreview';
+import { Navigation, Eye } from "lucide-react";
+import MapPreview from "./MapPreview";
 
 const CircuitCard = ({ circuit, onView, onEdit, onDelete }) => {
-
   return (
     <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
       <CardHeader className="pb-3">
@@ -21,7 +23,7 @@ const CircuitCard = ({ circuit, onView, onEdit, onDelete }) => {
               {circuit.descricao || "Sem descrição"}
             </CardDescription>
           </div>
-          
+
           <Badge variant="outline" className="text-xs ml-3">
             {circuit.pontos?.length || 0} pontos
           </Badge>
@@ -34,7 +36,9 @@ const CircuitCard = ({ circuit, onView, onEdit, onDelete }) => {
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <Navigation className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Preview do Traçado</span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Preview do Traçado
+              </span>
             </div>
             <MapPreview
               key={`circuit-card-map-${circuit.id}`}
@@ -58,7 +62,7 @@ const CircuitCard = ({ circuit, onView, onEdit, onDelete }) => {
               <Eye className="w-4 h-4 mr-1" />
               Visualizar
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -68,7 +72,7 @@ const CircuitCard = ({ circuit, onView, onEdit, onDelete }) => {
               Editar
             </Button>
           </div>
-          
+
           <Button
             variant="destructive"
             size="sm"

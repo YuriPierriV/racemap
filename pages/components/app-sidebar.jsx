@@ -1,11 +1,8 @@
-import { ChevronUp, Plus, ChevronRight } from "lucide-react";
+import { ChevronUp, Plus } from "lucide-react";
 
 import {
   SidebarGroupAction,
   SidebarInset,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -31,11 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@radix-ui/react-collapsible";
+import { Collapsible, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { aside_pages } from "models/routes";

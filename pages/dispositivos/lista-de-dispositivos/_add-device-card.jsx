@@ -1,18 +1,13 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import AddNewDevice from "./_add-new-device";
-import { Button } from "@/components/ui/button";
 
 export default function AddDeviceCard() {
   return (
-    <AddNewDevice 
-      text="" 
-      Button={({ children, ...props }) => (
-        <Card 
+    <AddNewDevice
+      text=""
+      Button={({ ...props }) => (
+        <Card
           className="cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-200 border-2 border-dashed flex items-center justify-center min-h-[200px]"
           {...props}
         >
