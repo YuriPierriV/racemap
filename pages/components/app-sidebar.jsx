@@ -1,15 +1,4 @@
-import {
-  Home,
-  Settings,
-  ChevronUp,
-  Map,
-  Plus,
-  ChevronRight,
-  Users,
-  Satellite,
-  CalendarDays,
-  BarChart,
-} from "lucide-react";
+import { ChevronUp, Plus, ChevronRight } from "lucide-react";
 
 import {
   SidebarGroupAction,
@@ -49,76 +38,7 @@ import {
 } from "@radix-ui/react-collapsible";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-
-// Menu items.
-export const items_pages = [
-  {
-    title: "Home",
-    url: "/home",
-    icon: Home,
-  },
-  {
-    title: "Pilotos",
-    icon: Users,
-    submenu: [
-      { title: "Lista de Pilotos", url: "/pilotos/lista-de-pilotos" },
-      { title: "Estatísticas", url: "#" },
-      { title: "Comparação de Pilotos", url: "#" },
-    ],
-  },
-  {
-    title: "Traçados",
-    url: "#",
-    icon: Map,
-    submenu: [
-      { title: "Mapa de Circuitos", url: "/tracados/mapa-de-circuitos" },
-      { title: "Criar Novo Traçado", url: "#" },
-      { title: "Análise de Traçados", url: "#" },
-    ],
-  },
-  {
-    title: "Dispositivos",
-    url: "#",
-    icon: Satellite,
-    submenu: [
-      {
-        title: "Lista de Dispositivos",
-        url: "/dispositivos/lista-de-dispositivos",
-      },
-      { title: "Gerenciar Dispositivos", url: "#" },
-    ],
-  },
-  {
-    title: "Calendário",
-    url: "#",
-    icon: CalendarDays,
-    submenu: [
-      { title: "Próximas Corridas", url: "/calendario/proximas-corridas" },
-      { title: "Histórico de Corridas", url: "#" },
-      { title: "Criar Novo Evento", url: "#" },
-    ],
-  },
-  {
-    title: "Estatísticas",
-    url: "#",
-    icon: BarChart,
-    submenu: [
-      { title: "Visão Geral", url: "#" },
-      { title: "Histórico de Tempos", url: "#" },
-      { title: "Exportação de Dados", url: "#" },
-    ],
-  },
-  {
-    title: "Configurações",
-    url: "#",
-    icon: Settings,
-    submenu: [
-      { title: "Perfil do Usuário", url: "#" },
-      { title: "Configuração da Corrida", url: "#" },
-      { title: "Preferências do Sistema", url: "#" },
-    ],
-  },
-];
+import { aside_pages } from "models/routes";
 
 export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
@@ -147,7 +67,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            {items_pages.map((item) => (
+            {aside_pages.map((item) => (
               <Collapsible key={item.title} className="group/collapsible">
                 <SidebarMenu>
                   {/* Botão principal da sidebar */}
@@ -161,28 +81,10 @@ export function AppSidebar() {
                         >
                           <item.icon className="w-5 h-5" />
                           <span>{item.title}</span>
-                          {item.submenu && (
-                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                          )}
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </CollapsibleTrigger>
-
-                  {/* Renderizar submenus apenas se existirem */}
-                  {item.submenu && (
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.submenu.map((subitem) => (
-                          <SidebarMenuSubItem key={subitem.title}>
-                            <SidebarMenuSubButton asChild>
-                              <a href={subitem.url}>{subitem.title}</a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  )}
                 </SidebarMenu>
               </Collapsible>
             ))}

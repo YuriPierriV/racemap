@@ -14,7 +14,7 @@ export default function LayoutMainPainel({ defaultOpen, children }) {
   return (
     <LayoutAside defaultOpen={defaultOpen}>
       <Header></Header>
-      <section id="main" className="container mx-auto space-y-5">
+      <section id="main" className="container mx-auto space-y-5 px-3">
         {children}
       </section>
     </LayoutAside>
