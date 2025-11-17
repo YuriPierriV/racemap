@@ -1,3 +1,5 @@
+@import "leaflet/dist/leaflet.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -157,4 +159,56 @@
   body {
     @apply bg-background text-foreground font-custom;
   }
+}
+
+/* Custom Scrollbar - Fino e Laranja */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary)) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Garantir que overlay e modal fiquem acima dos mapas Leaflet */
+[data-radix-popper-content-wrapper],
+[data-radix-dialog-overlay],
+[data-radix-dialog-content] {
+  z-index: 9999 !important;
+}
+
+/* Mapas Leaflet e seus elementos ficam na camada base */
+.leaflet-container {
+  position: relative;
+  z-index: 0 !important;
+}
+
+.leaflet-container * {
+  z-index: auto !important;
+}
+
+/* Badges dentro dos mapas também ficam baixos */
+.leaflet-container ~ div,
+.leaflet-container + div {
+  z-index: 1 !important;
 }

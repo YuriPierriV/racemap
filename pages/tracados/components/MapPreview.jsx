@@ -1,0 +1,477 @@
+/* eslint-disable no-undef */
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Route, Satellite, Layers } from "lucide-react";
+import { CiMap } from "react-icons/ci";
+import { useTheme } from "next-themes";
+
+const MapPreview = ({
+  points = [],
+  direction = "clockwise",
+  className = "h-48 w-full",
+  showDirection = true,
+}) => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
+  const [isClient, setIsClient] = useState(false);
+  const [trackDistance, setTrackDistance] = useState(0);
+  const [mapStyle, setMapStyle] = useState("medium"); // 'minimal', 'medium', 'satellite'
+  const { theme, systemTheme } = useTheme();
+
+  // Gerar ID único para cada instância do mapa para evitar conflitos
+  const mapId = useMemo(
+    () => `map-${Math.random().toString(36).substr(2, 9)}`,
+    [],
+  );
+
+  // Determinar o tema efetivo (considerando system theme)
+  const effectiveTheme = theme === "system" ? systemTheme : theme;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !mapRef.current || points.length === 0) return;
+
+    console.log("MapPreview - Pontos recebidos:", points);
+
+    const loadMap = async () => {
+      try {
+        const [L] = await Promise.all([
+          import("leaflet"),
+          import("leaflet/dist/leaflet.css"),
+        ]);
+        const LeafletModule = L.default || L;
+
+        if (LeafletModule.Icon?.Default?.prototype) {
+          delete LeafletModule.Icon.Default.prototype._getIconUrl;
+          LeafletModule.Icon.Default.mergeOptions({
+            iconRetinaUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+            iconUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+          });
+        }
+
+        // Limpar instância anterior se existir
+        if (mapInstanceRef.current) {
+          try {
+            mapInstanceRef.current.off(); // Remover todos os event listeners
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+          } catch (error) {
+            console.warn("Erro ao limpar mapa anterior:", error);
+          }
+        }
+
+        // Normalizar pontos - aceita tanto [lat, lng] quanto { lat, lng }
+        const normalizedPoints = points
+          .map((point) => {
+            if (Array.isArray(point)) {
+              return { lat: point[0], lng: point[1] };
+            }
+            return { lat: point.lat, lng: point.lng || point.long };
+          })
+          .filter((point) => {
+            // Filtrar pontos inválidos
+            const isValid =
+              point.lat != null &&
+              point.lng != null &&
+              !isNaN(point.lat) &&
+              !isNaN(point.lng) &&
+              point.lat !== 0 &&
+              point.lng !== 0;
+
+            if (!isValid) {
+              console.warn("Ponto inválido filtrado:", point);
+            }
+
+            return isValid;
+          });
+
+        console.log("MapPreview - Pontos normalizados:", normalizedPoints);
+
+        if (normalizedPoints.length === 0) {
+          console.error(
+            "MapPreview - Nenhum ponto válido para renderizar no mapa",
+          );
+          return;
+        }
+
+        // Calcular distância total do percurso (Haversine)
+        let totalDistance = 0;
+        for (let i = 0; i < normalizedPoints.length - 1; i++) {
+          const p1 = normalizedPoints[i];
+          const p2 = normalizedPoints[i + 1];
+
+          const R = 6371000; // Raio da Terra em metros
+          const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+          const dLng = ((p2.lng - p1.lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((p1.lat * Math.PI) / 180) *
+              Math.cos((p2.lat * Math.PI) / 180) *
+              Math.sin(dLng / 2) *
+              Math.sin(dLng / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          totalDistance += R * c;
+        }
+
+        // Salvar distância no state
+        setTrackDistance(totalDistance);
+
+        const bounds = LeafletModule.latLngBounds(
+          normalizedPoints.map((point) => [point.lat, point.lng]),
+        );
+        const center = bounds.getCenter();
+
+        const map = LeafletModule.map(mapRef.current, {
+          center: [center.lat, center.lng],
+          zoom: 15,
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          touchZoom: false,
+          doubleClickZoom: false,
+          scrollWheelZoom: false,
+          boxZoom: false,
+          keyboard: false,
+        });
+
+        // Função para obter a URL do tile layer baseado no estilo e tema
+        const getTileLayer = (style, isDark) => {
+          switch (style) {
+            case "minimal":
+              return null;
+            case "medium":
+              if (isDark) {
+                return {
+                  url: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+                  attribution: "",
+                  maxZoom: 19,
+                };
+              } else {
+                return {
+                  url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+                  attribution: "",
+                  maxZoom: 19,
+                };
+              }
+            case "satellite":
+              return {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                attribution: "",
+                maxZoom: 19,
+              };
+            default:
+              return {
+                url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+                attribution: "",
+                maxZoom: 19,
+              };
+          }
+        };
+
+        const isDarkTheme = effectiveTheme === "dark";
+        const initialTileConfig = getTileLayer(mapStyle, isDarkTheme);
+        if (initialTileConfig) {
+          tileLayerRef.current = LeafletModule.tileLayer(
+            initialTileConfig.url,
+            {
+              attribution: initialTileConfig.attribution,
+              maxZoom: initialTileConfig.maxZoom,
+            },
+          ).addTo(map);
+        } else {
+          map.getContainer().style.backgroundColor = isDarkTheme
+            ? "#1f2937"
+            : "#f5f5f5";
+        }
+
+        if (normalizedPoints.length > 0) {
+          // Criar array com circuito fechado (último ponto conecta ao primeiro)
+          const closedCircuitPoints = [
+            ...normalizedPoints,
+            normalizedPoints[0],
+          ];
+
+          // Função para suavizar curvas usando Catmull-Rom spline
+          const smoothCurve = (points, tension = 0.5, numOfSegments = 20) => {
+            if (points.length < 2) return points;
+
+            const smoothPoints = [];
+
+            // Para circuito fechado, adicionar pontos extras no início e fim para continuidade
+            const extendedPoints = [
+              points[points.length - 2],
+              ...points,
+              points[1],
+            ];
+
+            for (let i = 1; i < extendedPoints.length - 2; i++) {
+              const p0 = extendedPoints[i - 1];
+              const p1 = extendedPoints[i];
+              const p2 = extendedPoints[i + 1];
+              const p3 = extendedPoints[i + 2];
+
+              for (let t = 0; t < numOfSegments; t++) {
+                const tt = t / numOfSegments;
+                const tt2 = tt * tt;
+                const tt3 = tt2 * tt;
+
+                // Catmull-Rom formula
+                const q0 = -tension * tt3 + 2 * tension * tt2 - tension * tt;
+                const q1 = (2 - tension) * tt3 + (tension - 3) * tt2 + 1;
+                const q2 =
+                  (tension - 2) * tt3 + (3 - 2 * tension) * tt2 + tension * tt;
+                const q3 = tension * tt3 - tension * tt2;
+
+                const lat =
+                  p0.lat * q0 + p1.lat * q1 + p2.lat * q2 + p3.lat * q3;
+                const lng =
+                  p0.lng * q0 + p1.lng * q1 + p2.lng * q2 + p3.lng * q3;
+
+                smoothPoints.push({ lat, lng });
+              }
+            }
+
+            return smoothPoints;
+          };
+
+          // Suavizar as curvas
+          const smoothedPoints = smoothCurve(closedCircuitPoints, 0.5, 15);
+
+          // Desenhar linha do percurso com curvas suavizadas
+          LeafletModule.polyline(
+            smoothedPoints.map((point) => [point.lat, point.lng]),
+            {
+              color: direction === "clockwise" ? "#3b82f6" : "#ef4444",
+              weight: 4,
+              opacity: 0.8,
+              smoothFactor: 1.5,
+            },
+          ).addTo(map);
+
+          // Adicionar seta indicadora de direção próxima à bandeira
+          if (normalizedPoints.length > 2) {
+            const arrowPositionIndex = Math.min(
+              2,
+              Math.floor(normalizedPoints.length / 20),
+            );
+            const arrowPoint = normalizedPoints[arrowPositionIndex];
+            const nextArrowPoint =
+              normalizedPoints[arrowPositionIndex + 1] || normalizedPoints[0];
+
+            // Calcular ângulo da seta (bearing) do ponto atual para o próximo
+            const deltaLat = nextArrowPoint.lat - arrowPoint.lat;
+            const deltaLng = nextArrowPoint.lng - arrowPoint.lng;
+            const angle = Math.atan2(deltaLng, deltaLat) * (180 / Math.PI);
+
+            const directionArrowIcon = LeafletModule.divIcon({
+              className: "direction-arrow-icon",
+              html: `<div style="width: 28px; height: 28px; transform: rotate(${angle}deg); transform-origin: center;">
+              <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="shadow-arrow-preview" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.2"/>
+                  </filter>
+                </defs>
+                <circle cx="14" cy="14" r="12" fill="white" opacity="0.98" filter="url(#shadow-arrow-preview)"/>
+                <circle cx="14" cy="14" r="12" fill="none" stroke="#e5e7eb" stroke-width="1.5"/>
+                <line x1="14" y1="20" x2="14" y2="8" stroke="#1f2937" stroke-width="2" stroke-linecap="round"/>
+                <path d="M14 6 L10 11 L14 9.5 L18 11 Z" fill="#1f2937" stroke="#1f2937" stroke-width="0.5" stroke-linejoin="round"/>
+              </svg>
+            </div>`,
+              iconSize: [28, 28],
+              iconAnchor: [14, 14],
+            });
+
+            LeafletModule.marker([arrowPoint.lat, arrowPoint.lng], {
+              icon: directionArrowIcon,
+              interactive: false,
+              zIndexOffset: 500,
+            }).addTo(map);
+          }
+
+          // Ícone de INÍCIO - Bandeira (único marcador no circuito fechado)
+          const startIcon = LeafletModule.divIcon({
+            className: "custom-div-icon",
+            html: '<div style="font-size: 28px; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">🏁</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
+
+          LeafletModule.marker(
+            [normalizedPoints[0].lat, normalizedPoints[0].lng],
+            { icon: startIcon },
+          )
+            .addTo(map)
+            .bindPopup("<strong>🏁 Largada</strong>");
+
+          map.fitBounds(bounds, { padding: [10, 10] });
+        }
+
+        mapInstanceRef.current = map;
+      } catch (error) {
+        console.error("Erro ao criar o mapa:", error);
+      }
+    };
+
+    loadMap();
+
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.off(); // Remover todos os event listeners
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        } catch (error) {
+          console.warn("Erro ao limpar mapa no cleanup:", error);
+        }
+      }
+    };
+  }, [isClient, points, direction, showDirection, mapStyle, effectiveTheme]);
+
+  // Efeito para atualizar o tile layer quando o estilo mudar
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+
+    const updateTileLayer = async () => {
+      const L = await import("leaflet");
+      const LeafletModule = L.default || L;
+
+      const getTileLayer = (style, isDark) => {
+        switch (style) {
+          case "minimal":
+            return null;
+          case "medium":
+            if (isDark) {
+              return {
+                url: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+                attribution: "",
+                maxZoom: 19,
+              };
+            } else {
+              return {
+                url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+                attribution: "",
+                maxZoom: 19,
+              };
+            }
+          case "satellite":
+            return {
+              url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              attribution: "",
+              maxZoom: 19,
+            };
+          default:
+            return {
+              url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+              attribution: "",
+              maxZoom: 19,
+            };
+        }
+      };
+
+      // Remover camada antiga
+      if (tileLayerRef.current) {
+        mapInstanceRef.current.removeLayer(tileLayerRef.current);
+        tileLayerRef.current = null;
+      }
+
+      // Adicionar nova camada
+      const isDarkTheme = effectiveTheme === "dark";
+      const newTileConfig = getTileLayer(mapStyle, isDarkTheme);
+      if (newTileConfig) {
+        tileLayerRef.current = LeafletModule.tileLayer(newTileConfig.url, {
+          attribution: newTileConfig.attribution,
+          maxZoom: newTileConfig.maxZoom,
+        }).addTo(mapInstanceRef.current);
+        mapInstanceRef.current.getContainer().style.backgroundColor = "";
+      } else {
+        mapInstanceRef.current.getContainer().style.backgroundColor =
+          isDarkTheme ? "#1f2937" : "#f5f5f5";
+      }
+    };
+
+    updateTileLayer();
+  }, [mapStyle, effectiveTheme]);
+
+  if (!isClient) {
+    return (
+      <div className={`relative ${className}`}>
+        <div className="h-full w-full rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+          <span className="text-gray-500 text-sm">Carregando mapa...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div
+        ref={mapRef}
+        id={mapId}
+        className="h-full w-full rounded-lg border border-gray-200"
+      />
+
+      {/* Badge de distância */}
+      {points.length > 1 && trackDistance > 0 && (
+        <div className="absolute top-2 right-2 bg-background/95 backdrop-blur-sm rounded px-2 py-1 shadow-sm border border-border">
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <Route className="w-3.5 h-3.5 text-primary" />
+            <span className="text-foreground">
+              {trackDistance >= 1000
+                ? `${(trackDistance / 1000).toFixed(2)} km`
+                : `${Math.round(trackDistance)} m`}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Controle de estilo de mapa */}
+      <div className="absolute top-2 left-2 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border overflow-hidden">
+        <div className="flex">
+          <button
+            onClick={() => setMapStyle("minimal")}
+            className={`px-2.5 py-1.5 flex items-center justify-center transition-colors ${
+              mapStyle === "minimal"
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-foreground hover:bg-accent"
+            }`}
+            title="Modo Mínimo - Apenas traçado"
+          >
+            <Layers className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setMapStyle("medium")}
+            className={`px-2.5 py-1.5 flex items-center justify-center transition-colors border-l border-border ${
+              mapStyle === "medium"
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-foreground hover:bg-accent"
+            }`}
+            title="Mapa Limpo"
+          >
+            <CiMap className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setMapStyle("satellite")}
+            className={`px-2.5 py-1.5 flex items-center justify-center transition-colors border-l border-border ${
+              mapStyle === "satellite"
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-foreground hover:bg-accent"
+            }`}
+            title="Mapa Satélite"
+          >
+            <Satellite className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MapPreview;

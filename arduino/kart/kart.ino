@@ -1,14 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include <TinyGPS++.h>
+#include <TinyGPS++.h> //tinygpsPlus by mikal 
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
-#include <ArduinoJson.h>
+#include <ArduinoJson.h> //benoit
 
 // Configurações do Wi-Fi dinâmico
 #define EEPROM_SIZE 200
-#define WIFI_AP_SSID "ConfigWiFi"
+#define WIFI_AP_SSID "RaceMap_Config"
 #define WIFI_AP_PASSWORD ""
 #define MAX_NETWORKS 2
 
@@ -24,7 +24,11 @@ Network networks[MAX_NETWORKS];
 String connectedSSID = "";
 
 // Variáveis globais para botão e modo AP
-#define BUTTON_PIN D6
+#define BUTTON_PIN D2
+#define GREEN D7
+#define BLUE D5
+#define RED D6
+#define RGB_VIN D1
 #define BUTTON_HOLD_TIME 3000
 unsigned long apModeStartTime = 0;            // Marca o momento em que o AP foi ativado
 const unsigned long apModeDuration = 120000;  // Duração do modo AP em milissegundos (2 minutos)
@@ -38,8 +42,6 @@ bool wifiConnected = false;  // Indica se o Wi-Fi está conectado
 // Configuração do MQTT e GPS
 TinyGPSPlus gps;
 
-const int ppsPin = 14;  // GPIO14 (D5)
-volatile unsigned long ppsCounter = 0;
 
 const char* mqtt_server = "5d9db2e1dddd44ddb1f65079e8bb21e0.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
@@ -174,9 +176,9 @@ bool connectToSavedNetworks() {
         Serial.print(".");
 
         // Verifica se o botão foi pressionado
-        if (digitalRead(BUTTON_PIN) == LOW) {
+        if (digitalRead(BUTTON_PIN) == HIGH) {
           unsigned long pressStart = millis();
-          while (digitalRead(BUTTON_PIN) == LOW) {
+          while (digitalRead(BUTTON_PIN) == HIGH) {
             yield();
             if (millis() - pressStart >= BUTTON_HOLD_TIME) {  // Botão pressionado por tempo suficiente
               Serial.println("\nBotão pressionado. Interrompendo tentativa de conexão e iniciando modo AP.");
@@ -261,7 +263,7 @@ void monitorButton() {
   static bool buttonPressed = false;
   static unsigned long pressStartTime = 0;
 
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Botão pressionado
+  if (digitalRead(BUTTON_PIN) == HIGH) {  // Botão pressionado
     if (!buttonPressed) {
       buttonPressed = true;
       pressStartTime = millis();                                 // Marca o tempo de início da pressão
@@ -412,6 +414,7 @@ void setupWebServer() {
     unsigned long startAttemptTime = millis();
 
     while (WiFi.status() != WL_CONNECTED && (millis() - startAttemptTime) < 15000) {
+      ligarCor(RED);
       delay(500);
     }
 
@@ -535,13 +538,14 @@ void reconnect() {
     if (WiFi.status() != WL_CONNECTED) {
       wifiConnected = false;
     }
+    
     Serial.print("Tentando conectar ao MQTT...");
     if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("Conectado ao MQTT!");
       client.subscribe(mqtt_topic_read.c_str());
       client.subscribe((mqtt_topic_read + "/mode").c_str());  // Tópico para /mode
       client.subscribe((mqtt_topic_read + "/sts").c_str());   // Tópico para /status
-
+      ligarCor(GREEN);
     } else {
       Serial.print("Falha ao conectar. Código de erro: ");
       Serial.println(client.state());
@@ -549,6 +553,7 @@ void reconnect() {
     }
   }
 }
+
 
 // Publicação de dados GPS
 void publishGPSData() {
@@ -655,12 +660,51 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 
+void desligarRGB() {
+  digitalWrite(RED, HIGH);
+  digitalWrite(GREEN, HIGH);
+  digitalWrite(BLUE, HIGH);
+}
+
+void ligarCor(int cor) {
+  desligarRGB();
+  digitalWrite(RGB_VIN, HIGH);
+  digitalWrite(cor, LOW);
+}
+
+void piscarAmareloAP() {
+  static unsigned long previousMillis = 0;
+  const long interval = 400;  // velocidade do piscar
+  static bool ledState = false;
+
+  if (millis() - previousMillis >= interval) {
+    previousMillis = millis();
+    ledState = !ledState;
+
+    if (ledState) {
+      // Liga amarelo = vermelho + verde
+      digitalWrite(RGB_VIN, HIGH);
+      digitalWrite(RED, LOW);
+      digitalWrite(GREEN, LOW);
+      digitalWrite(BLUE, HIGH);
+    } else {
+      desligarRGB();
+    }
+  }
+}
+
 
 void setup() {
   Serial.begin(115200);
   Serial.swap();        // Troca para UART alternativo
   Serial.begin(38400);  // Configure para o baud rate do seu módulo GPS
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+  pinMode(RGB_VIN, OUTPUT);
+  
+  desligarRGB();
   EEPROM.begin(EEPROM_SIZE);
   delay(5000);
   //clearNetworks();
@@ -670,7 +714,6 @@ void setup() {
   espClient.setInsecure();  // Desabilita a verificação de certificado (se necessário)
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
 
   // Configuração do servidor web
   setupWebServer();

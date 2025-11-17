@@ -1,3 +1,4 @@
+import React, { useEffect, useCallback } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DeviceConnectionPanel } from "./_device-connected";
-import { useEffect } from "react";
 import { SheetClose, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
@@ -43,17 +43,23 @@ export function DeviceForm() {
   const isDeviceValid =
     !formState.errors.deviceId && watch("deviceId").length === 6;
 
-  useEffect(() => {
-    if (watch("checked") === true) {
-      handleConnectionResult(false); // Define como false se o ID for alterado
-    }
-  }, [watch("deviceId")]); // Dispara sempre que o deviceId mudar
+  const handleConnectionResult = useCallback(
+    (success) => {
+      console.log(success);
+      setValue("checked", success);
+      trigger();
+    },
+    [setValue, trigger],
+  );
 
-  function handleConnectionResult(success) {
-    console.log(success);
-    setValue("checked", success);
-    trigger();
-  }
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === "deviceId" && value.checked === true) {
+        handleConnectionResult(false); // Define como false se o ID for alterado
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, handleConnectionResult]); // Dispara sempre que o deviceId mudar
 
   // Manipulador de envio do formulário
   async function onSubmit(values) {
